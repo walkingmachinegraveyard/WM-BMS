@@ -80,21 +80,95 @@
 #define AD7280A_CONTROL_CHAIN_REG_READBACK_DISABLE      0x00
 #define AD7280A_CONTROL_CHAIN_REG_READBACK_ENABLE       0x01
 
+#define RX_BUFFER_LENGTH 4
+static uint8_t rx_buffer[RX_BUFFER_LENGTH];
+static uint8_t tx_buffer[4];
 
-uint8_t ad7280a_open(ad7280a_t *a) {
+//
+// AD7280A private
+//
+
+// AD7280A checksum
+//
+// Computed on Bit[31-10]
+static uint32_t crc8(uint32_t buffer) {
+    return 0;
 }
 
+//
+// AD7280A exported
+//
+
+/**
+ * Open an AD7280A
+ */
+uint8_t ad7280a_open(ad7280a_t *a, SPIDriver *spid) {
+    a->spid = spid;
+}
+
+/**
+ * Close an AD7280A
+ */
 uint8_t ad7280a_close(ad7280a_t *a) {
 }
 
-uint8_t ad7280a_probe(ad7280a_t *a) {
+/**
+ * Read from an AD7280A
+ */
+uint8_t ad7280a_read(ad7280_t *a, uint32_t dev, uint32_t reg) {
+    uint32_t packet = 0;
+    uint32_t dev = 0;
+    uint32_t reg = 0;
+    uint32_t val = 0;
+    uint32_t all = 0;
+
+    spiAcquireBus(s->spid);
+
+    spiSelect(s->spid);
+
+    spiReceive(s->spid, rx_buffer, RX_BUFFER_LENGTH);
+
+    spiUnselect(s->spid):
+
+    spiReleaseBus(s->spid);
+
+    // Verify CRC
+    if (crc8(rx_buffer) != rx_buffer >> 0x10) {
+        return -1;
+    }
+
+    // Unpack data
+    dev = packet >> 0x27;
+    reg = (packet >> 0x21) & 0x0F;
+    val = (packet >> 0x13) & 0x10;
+    all = (packet >> 0x12) & 0x01;
 }
 
-uint8_t ad7280a_configure(ad7280a_t *a) {
+/**
+ * Write to an AD7280A
+ */
+uint8_t ad7280a_write(ad7280_t *a, uint32_t dev, uint32_t reg, uint32_t val, uint32_t all) {
+    uint32_t packet = 0;
+    uint32_t crc = 0;
+
+    // Pack data
+    packet |= dev << 0x27;
+    packet |= reg << 0x21;
+    packet |= val << 0x13;
+    packet |= all << 0x12;
+
+    // Compute CRC
+    crc = crc8(packet);
+    packet |= crc << 0x02;
+
+    spiAcquireBus(s->spi);
+
+    spiSelect(s->spid);
+
+    spiSend(s->spid, buflen, buffer);
+
+    spiUnselect(s->spid):
+
+    spiReleaseBus(s->spi);
 }
 
-uint8_t ad7280a_read(ad7280_t *a) {
-}
-
-uint8_t ad7280a_write(ad7280_t *a) {
-}
