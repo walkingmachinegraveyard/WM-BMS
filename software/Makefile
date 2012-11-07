@@ -51,7 +51,7 @@ endif
 #
 
 # Define project name here
-PROJECT = chibios-skeleton
+PROJECT = bms
 
 # Imported source files
 CHIBIOS = ChibiOS
@@ -60,7 +60,7 @@ CHIBIOS = ChibiOS
 LDSCRIPT= $(CHIBIOS)/demos/ARMCM3-STM32F100-DISCOVERY/ch.ld
 
 # Board specific build files
-include $(CHIBIOS)/boards/ST_STM32VL_DISCOVERY/board.mk
+include ./boards/bms/board.mk
 include $(CHIBIOS)/os/hal/platforms/STM32/platform.mk
 include $(CHIBIOS)/os/ports/GCC/ARMCMx/STM32/port.mk
 
@@ -113,7 +113,7 @@ ASMSRC = $(PORTASM)
 INCDIR = $(PORTINC) $(KERNINC) $(TESTINC) \
          $(HALINC) $(PLATFORMINC) $(BOARDINC) \
          $(CHIBIOS)/os/various \
-         config include
+         config boards src
 
 #
 # Project, sources and paths

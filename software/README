@@ -2,9 +2,10 @@ Directory layout
 ~~~~~~~~~~~~~~~~
 	- src: source code
 	- config: configuration file related to the hardware
+    - boards: board IO pins setup
 
 How to build?
 ~~~~~~~~~~~~~
 	1/ Get a stable version of ChibiOS
 	2/ Edit the Makefile to provide the path to the ChibiOS source
-	3/ Type 'make'.
+	3/ Type 'CHIBIOS=/path/to/chibios make'.
