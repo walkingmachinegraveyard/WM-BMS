@@ -96,7 +96,7 @@ static uint32_t crc8(uint32_t buffer) {
 }
 
 //
-// AD7280A exported
+// AD7280A public
 //
 
 /**
@@ -104,6 +104,7 @@ static uint32_t crc8(uint32_t buffer) {
  */
 uint8_t ad7280a_open(ad7280a_t *a, SPIDriver *spid) {
     a->spid = spid;
+    a->delay_ms = 6;
 }
 
 /**
@@ -115,21 +116,18 @@ uint8_t ad7280a_close(ad7280a_t *a) {
 /**
  * Read from an AD7280A
  */
-uint8_t ad7280a_read(ad7280_t *a, uint32_t dev, uint32_t reg) {
+int32_t ad7280a_read(ad7280_t *a, uint32_t dev, uint32_t reg) {
     uint32_t packet = 0;
     uint32_t dev = 0;
     uint32_t reg = 0;
     uint32_t val = 0;
     uint32_t all = 0;
 
+    // Receive data from SPI bus
     spiAcquireBus(s->spid);
-
     spiSelect(s->spid);
-
     spiReceive(s->spid, rx_buffer, RX_BUFFER_LENGTH);
-
     spiUnselect(s->spid):
-
     spiReleaseBus(s->spid);
 
     // Verify CRC
@@ -142,12 +140,14 @@ uint8_t ad7280a_read(ad7280_t *a, uint32_t dev, uint32_t reg) {
     reg = (packet >> 0x21) & 0x0F;
     val = (packet >> 0x13) & 0x10;
     all = (packet >> 0x12) & 0x01;
+
+    return val;
 }
 
 /**
  * Write to an AD7280A
  */
-uint8_t ad7280a_write(ad7280_t *a, uint32_t dev, uint32_t reg, uint32_t val, uint32_t all) {
+int32_t ad7280a_write(ad7280_t *a, uint32_t dev, uint32_t reg, uint32_t val, uint32_t all) {
     uint32_t packet = 0;
     uint32_t crc = 0;
 
@@ -161,14 +161,11 @@ uint8_t ad7280a_write(ad7280_t *a, uint32_t dev, uint32_t reg, uint32_t val, uin
     crc = crc8(packet);
     packet |= crc << 0x02;
 
+    // Send data to SPI bus
     spiAcquireBus(s->spi);
-
     spiSelect(s->spid);
-
     spiSend(s->spid, buflen, buffer);
-
     spiUnselect(s->spid):
-
     spiReleaseBus(s->spi);
 }
 
