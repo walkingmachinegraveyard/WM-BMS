@@ -187,8 +187,6 @@ uint8_t do_crc8(ad7280a_packet_t *packet, crc_type_t crc);
 uint32_t spi_exchange(ad7280a_t *a);
 // Test the received crc if it matches the packet
 uint8_t crc_conv_check(ad7280a_t *a);
-// Test the do_crc8 function (TEMPORARY)
-uint32_t test_crc8();
 //==============================================================================
 
 

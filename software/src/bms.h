@@ -9,6 +9,7 @@
 #define BMS_H
 
 #include "ad72.h"
+#include "battery.h"
 #include "acs.h"
 
 struct bms {

@@ -29,7 +29,7 @@ static msg_t spi_thread_1(void *p) {
   battery_t cells[6];
   int i = 0;
   for(i=0; i<6; i++){
-    battery_init(&cells[i])
+    battery_init(&cells[i],i);
   }
 
   ad7280a_t ad72;
@@ -45,6 +45,8 @@ static msg_t spi_thread_1(void *p) {
 }
 
 int main(int argc, char *argv[]) {
+
+
     // Init OS
     halInit();
     chSysInit();

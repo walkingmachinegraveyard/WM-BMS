@@ -235,13 +235,3 @@ void ad7280a_balance_cell_off(uint8_t cell, ad7280a_t *a) {
   a->cellbalance &= ~(1<<(cell+1));
   bus_write(a, AD7280A_CELL_BALANCE, a->cellbalance);
 }
-
-uint8_t ad7280a_status(ad7280a_t *a,battery_t cell[]) {
-  uint8_t i;
-  for(i=0; i<6; i++){
-    cell[i]->voltage = ad7280a_read_cell(i,cell[i]->cell_id);
-  }
-}
-
-
-

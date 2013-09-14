@@ -6,14 +6,23 @@
  */
 #include <stdint.h>
 #include "battery.h"
+#include "ad72.h"
 
-void battery_init(battery_t *bat) {
+void battery_init(battery_t *bat, uint8_t cell_id) {
     bat->status = BATTERY_STATUS_UNKNOWN;
     bat->health = BATTERY_HEALTH_UNKNOWN;
     bat->power = BATTERY_POWER_UNKNOWN;
     bat->present = 0;
     bat->temperature = 0;
     bat->voltage = 0;
+    bat->cell_id= cell_id;
+}
+
+uint8_t battery_check_voltage(ad7280a_t *a,battery_t cell[]) {
+  uint8_t i;
+  for(i=0; i<6; i++){
+    cell[i].voltage = ad7280a_read_cell(i,a);
+  }
 }
 
 battery_status_t battery_get_status(battery_t *bat) {
