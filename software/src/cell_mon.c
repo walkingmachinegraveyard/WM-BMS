@@ -10,7 +10,7 @@
 
 #include <ch.h>
 
-#include "ad7280a.h"
+#include "ad72.h"
 #include "cell_mon.h"
 
 // Thread configuration
@@ -33,5 +33,5 @@ static void cell_monitor(void *arg) {
 void cell_mon_init(cell_mon_t *cmon, ad7280a_t *ad7280a) {
     cmon->ad7280a = ad7280a;
 
-    chThdCreateStatic(cell_monitor_wa, sizeof(cell_monitor_wa), NORMALPRIO, cell_monitor);
+    chThdCreateStatic(cell_monitor_wa, sizeof(cell_monitor_wa), NORMALPRIO, cell_monitor, NULL);
 }

@@ -1,6 +1,9 @@
 #ifndef BATTERY_H
 #define BATTERY_H
 
+
+
+
 enum battery_status {
     BATTERY_STATUS_UNKNOWN,
     BATTERY_STATUS_CHARGING,
@@ -25,15 +28,15 @@ enum battery_power {
     BATTERY_POWER_UNKNOWN,
     BATTERY_POWER_NONE,
     BATTERY_POWER_AC,
-}
+};
 
 typedef enum battery_power battery_power_t;
 
 struct battery {
+    uint8_t cell_id;
     battery_status_t status;
     battery_health_t health;
     battery_power_t power;
-
     uint32_t present;
     uint32_t temperature;
     uint32_t voltage;

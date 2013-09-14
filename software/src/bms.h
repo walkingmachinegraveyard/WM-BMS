@@ -8,8 +8,11 @@
 #ifndef BMS_H
 #define BMS_H
 
+#include "ad72.h"
+#include "acs.h"
+
 struct bms {
-    char *progname = "bms";
+    char *progname;
 };
 
 typedef struct bms bms_t;

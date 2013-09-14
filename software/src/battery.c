@@ -4,7 +4,7 @@
  *
  * Battery
  */
-
+#include <stdint.h>
 #include "battery.h"
 
 void battery_init(battery_t *bat) {
