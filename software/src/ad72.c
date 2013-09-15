@@ -182,17 +182,17 @@ uint8_t init_ad7280a(ad7280a_t *a) {
 
 // Use this function to pack the data/reg properly
 uint8_t bus_write(ad7280a_t *a, uint8_t reg, uint32_t data) {
-  ad7280a_packet_t *packet;
+  ad7280a_packet_t packet;
   crc_type_t crc = WRITE_REGISTER;
   // Pack the data in the appropriate bitfields
-  packet->w_register.bit_pattern = 0x2;
-  packet->w_register.reserved = 0;
-  packet->w_register.write_all = 1;
-  packet->w_register.register_address = reg;
-  packet->w_register.data = data;
-  packet->w_register.device_address = 0;
-  packet->w_register.crc = do_crc8(packet,crc);
-  (a->txbuf) = packet->packed;
+  packet.w_register.bit_pattern = 0x2;
+  packet.w_register.reserved = 0;
+  packet.w_register.write_all = 1;
+  packet.w_register.register_address = reg;
+  packet.w_register.data = data;
+  packet.w_register.device_address = 0;
+  packet.w_register.crc = do_crc8(&packet,crc);
+  (a->txbuf) = packet.packed;
   spi_exchange(a);
   chThdSleepMilliseconds(a->delay_ms);
   return 0;
@@ -200,7 +200,9 @@ uint8_t bus_write(ad7280a_t *a, uint8_t reg, uint32_t data) {
 
 // Read cell voltage (choose from 1 to 6)
 uint32_t ad7280a_read_cell(uint8_t cell,ad7280a_t *a) {
-  ad7280a_packet_t *packet;
+  ad7280a_packet_t packet;
+  packet.packed = 0;
+
   // 1.On ecrit le numero de registre de la cellule
   bus_write(a, AD7280A_READ, ((cell-1) << 2));
   // Turns off the read operation
@@ -214,9 +216,12 @@ uint32_t ad7280a_read_cell(uint8_t cell,ad7280a_t *a) {
   //6. On applique 32 SCLKs pour avoir la lecture dans le rxbuf
   (a->txbuf) = 0xF800030A; // (aucun data/registres)
   spi_exchange(a);
+
   chThdSleepMilliseconds(a->delay_ms);
-  packet->packed = (a->rxbuf);
-  return packet->r_conversion.conversion_data;
+
+  packet.packed = (a->rxbuf);
+
+  return packet.r_conversion.conversion_data;
 }
 
 // Read thermistor (choose therm from 1 to 2)

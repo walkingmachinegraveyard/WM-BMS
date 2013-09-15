@@ -20,10 +20,15 @@ void battery_init(battery_t *bat, uint8_t cell_id) {
 
 uint8_t battery_check_voltage(ad7280a_t *a,battery_t cell[]) {
   uint8_t i;
+
   for(i=0; i<6; i++){
     cell[i].voltage = ad7280a_read_cell(i,a);
   }
+
+  return 1;
 }
+
+
 
 battery_status_t battery_get_status(battery_t *bat) {
     return bat->status;

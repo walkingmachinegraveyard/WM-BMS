@@ -1,6 +1,8 @@
 #ifndef BATTERY_H
 #define BATTERY_H
 
+#include "ad72.h"
+
 enum battery_status {
     BATTERY_STATUS_UNKNOWN,
     BATTERY_STATUS_CHARGING,
@@ -39,5 +41,9 @@ typedef struct battery battery_t;
 
 // Init Battery
 void battery_init(battery_t *bat, uint8_t cell_id);
+
+// Read all voltages;
+uint8_t battery_check_voltage(ad7280a_t *a,battery_t cell[]);
+
 
 #endif // BATTERY_H
