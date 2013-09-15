@@ -1,0 +1,24 @@
+#vim
+*.swp
+
+# Build
+catkin/
+CATKIN_IGNORE
+devel/
+gtest/
+catkin_generated/
+bin/
+build/
+lib/
+
+CMakeFiles/
+Makefile
+CMakeCache.txt
+*~
+
+# Eclipse project
+cmake_install.cmake
+.cproject
+.project
+.pydevproject
+.settings/
