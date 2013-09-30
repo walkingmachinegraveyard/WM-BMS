@@ -67,36 +67,17 @@ uint8_t do_crc8(ad7280a_packet_t *packet, crc_type_t crc) {
   return crc_out;
 }
 
-// (Fonction inutile elle sert seulement a tester mon code)
-// If returns 1 do_crc8 is working properly
-uint32_t test_crc8() {
-  ad7280a_packet_t packet;
-  packet.packed = 0;
-  crc_type_t crc = WRITE_REGISTER;
-  uint8_t proper_crc = 0x61;  // Proper CRC given in datasheet
-  packet.w_register.bit_pattern = 0x2;
-  packet.w_register.reserved = 0;
-  packet.w_register.write_all = 0;
-  packet.w_register.register_address = 0;
-  packet.w_register.data = 0;
-  packet.w_register.device_address = 0x1F;
-  packet.w_register.reserved = 0;
-  packet.w_register.crc = do_crc8(&packet,crc);
-  if(packet.w_register.crc != proper_crc) {
-    return 0;
-  }
-    return packet.w_register.crc;
-}
-
 //Verifie que le crc recu est bon
 uint8_t crc_conv_check(ad7280a_t *a) {
   crc_type_t crc_type = CRC_DATA_READ;
-  ad7280a_packet_t *packet;
-  uint8_t received_crc = packet->r_conversion.crc;
-  packet->packed = a->rxbuf;
-  if(received_crc != do_crc8(packet,crc_type)) {
+  ad7280a_packet_t packet;
+  packet.packed = a->rxbuf;
+  uint8_t received_crc = packet.r_conversion.crc;
+
+  if(received_crc != do_crc8(&packet,crc_type)) {
     return 0;
   }
+
   return 1;
 }
 
@@ -121,17 +102,20 @@ uint32_t spi_exchange(ad7280a_t *a) {
   uint8_t tx_split_buf[4];
   uint8_t rx_split_buf[4];
   a->rxbuf = 0;
+
   // Division du transfer packet en quatre divisions de 8 bits
   for(i = 0; i<4; ++i) {
       tx_split_buf[i] = a->txbuf >> (24 -(i*8));
   }
-  // Spi Ex change
+
+  // Spi Exchange
   spiAcquireBus(&SPID1);                             /* Acquire ownership of the bus.    */
   spiStart(&SPID1, &ls_spicfg);                      /* Setup transfer parameters.       */
   spiSelect(&SPID1);                                 /* Slave Select assertion.          */
   spiExchange(&SPID1, 4, tx_split_buf, rx_split_buf);/* Atomic transfer operations.      */
   spiUnselect(&SPID1);                               /* Slave Select de-assertion.       */
   spiReleaseBus(&SPID1);                             /* Ownership release.               */
+
   // Regroupement des quatre packets recu
   for(i = 0; i<4; i++) {
     a->rxbuf |= rx_split_buf[i] << (i*8);
@@ -140,48 +124,42 @@ uint32_t spi_exchange(ad7280a_t *a) {
 }
 
 // Power up the ad7280a by putting the powerdown pin to high
-uint8_t power_up_ad7280a(ad7280a_t *a) {
+void power_up_ad7280a(ad7280a_t *a) {
   palSetPad(GPIOB,1);
   a->on_off = 1;
 }
 
 // Power down the ad7280a by putting the powerdown pin to low
-uint8_t power_down_ad7280a(ad7280a_t *a) {
+void power_down_ad7280a(ad7280a_t *a) {
   palClearPad(GPIOB,1);
   a->on_off = 0;
 }
 
 // Initialize the ad7280
 uint8_t init_ad7280a(ad7280a_t *a) {
-  ad7280a_packet_t *packet_init;
   a->delay_ms = 6;
   a->txbuf = 0;
   a->rxbuf = 0;
   a->cellbalance = 0;
-  // Set the PowerDown Pin
-  palSetGroupMode(GPIOB, PAL_PORT_BIT(1), 0, PAL_MODE_OUTPUT_PUSHPULL);
   power_up_ad7280a(a);
   // set Bit D2 and Bit D0 of the control register to 1
   // and set Bit D1 of the control
   (a->txbuf) = 0x01C2B6E2;
   spi_exchange(a);
-  chThdSleepMilliseconds(a->delay_ms);
   // Write the register address corresponding to the lower byte
   // of the control register to the read register on all parts.
   (a->txbuf) = 0x038716CA;
   spi_exchange(a);
-  chThdSleepMilliseconds(a->delay_ms);
   // Apply a CS low pulse that frames 32 SCLKs
   // (This is used to verify that the ad7280a has received and
   // locked his unique address)
   (a->txbuf) = 0xF800030A;
   spi_exchange(a);
-  chThdSleepMilliseconds(a->delay_ms);
-  return 0;
+  return 1;
 }
 
 // Use this function to pack the data/reg properly
-uint8_t bus_write(ad7280a_t *a, uint8_t reg, uint32_t data) {
+void bus_write(ad7280a_t *a, uint8_t reg, uint32_t data) {
   ad7280a_packet_t packet;
   crc_type_t crc = WRITE_REGISTER;
   // Pack the data in the appropriate bitfields
@@ -194,8 +172,6 @@ uint8_t bus_write(ad7280a_t *a, uint8_t reg, uint32_t data) {
   packet.w_register.crc = do_crc8(&packet,crc);
   (a->txbuf) = packet.packed;
   spi_exchange(a);
-  chThdSleepMilliseconds(a->delay_ms);
-  return 0;
 }
 
 // Read cell voltage (choose from 1 to 6)
@@ -216,11 +192,7 @@ uint32_t ad7280a_read_cell(uint8_t cell,ad7280a_t *a) {
   //6. On applique 32 SCLKs pour avoir la lecture dans le rxbuf
   (a->txbuf) = 0xF800030A; // (aucun data/registres)
   spi_exchange(a);
-
-  chThdSleepMilliseconds(a->delay_ms);
-
   packet.packed = (a->rxbuf);
-
   return packet.r_conversion.conversion_data;
 }
 

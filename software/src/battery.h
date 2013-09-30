@@ -40,7 +40,7 @@ struct battery {
 typedef struct battery battery_t;
 
 // Init Battery
-void battery_init(battery_t *bat, uint8_t cell_id);
+void battery_init(battery_t bat[]);
 
 // Read all voltages;
 uint8_t battery_check_voltage(ad7280a_t *a,battery_t cell[]);

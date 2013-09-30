@@ -18,4 +18,6 @@ struct bms {
 
 typedef struct bms bms_t;
 
+void init_bms(bms_t *bms);
+
 #endif

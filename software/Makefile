@@ -5,8 +5,12 @@
 
 # Compiler options here.
 ifeq ($(USE_OPT),)
-	# By default use -O0 -ggdb to enable sane debugging
-  USE_OPT = -O0 -ggdb -fomit-frame-pointer
+  USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16
+endif
+
+# C specific options here (added to USE_OPT).
+ifeq ($(USE_COPT),)
+  USE_COPT = 
 endif
 
 # C++ specific options here (added to USE_OPT).
@@ -24,9 +28,9 @@ ifeq ($(USE_THUMB),)
   USE_THUMB = yes
 endif
 
-# Enable register caching optimization (read documentation).
-ifeq ($(USE_CURRP_CACHING),)
-  USE_CURRP_CACHING = no
+# Enable this if you want to see the full log while compiling.
+ifeq ($(USE_VERBOSE_COMPILE),)
+  USE_VERBOSE_COMPILE = no
 endif
 
 #
@@ -36,6 +40,12 @@ endif
 ##############################################################################
 # Architecture or project specific options
 #
+
+# Enables the use of FPU on Cortex-M4.
+# Enable this if you really want to use the STM FWLib.
+ifeq ($(USE_FPU),)
+  USE_FPU = no
+endif
 
 # Enable this if you really want to use the STM FWLib.
 ifeq ($(USE_FWLIB),)
@@ -53,23 +63,20 @@ endif
 # Define project name here
 PROJECT = bms
 
-# Imported source files
-CHIBIOS = ChibiOS
+SRC = src
+
+# Imported source files and paths
+CHIBIOS = ../ChibiOS
+include $(CHIBIOS)/boards/ST_STM32F4_DISCOVERY/board.mk
+include $(CHIBIOS)/os/hal/platforms/STM32F4xx/platform.mk
+include $(CHIBIOS)/os/hal/hal.mk
+include $(CHIBIOS)/os/ports/GCC/ARMCMx/STM32F4xx/port.mk
+include $(CHIBIOS)/os/kernel/kernel.mk
+include $(CHIBIOS)/test/test.mk
 
 # Define linker script file here
-LDSCRIPT= $(CHIBIOS)/demos/ARMCM3-STM32F100-DISCOVERY/ch.ld
-
-# Board specific build files
-include ./boards/bms/board.mk
-include $(CHIBIOS)/os/hal/platforms/STM32/platform.mk
-include $(CHIBIOS)/os/ports/GCC/ARMCMx/STM32/port.mk
-
-# Core build files
-include $(CHIBIOS)/os/hal/hal.mk
-include $(CHIBIOS)/os/kernel/kernel.mk
-
-# Uncomment this to include the test code in the build
-#include $(CHIBIOS)/test/test.mk
+LDSCRIPT= $(PORTLD)/STM32F407xG.ld
+#LDSCRIPT= $(PORTLD)/STM32F407xG_CCM.ld
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -79,8 +86,8 @@ CSRC = $(PORTSRC) \
        $(HALSRC) \
        $(PLATFORMSRC) \
        $(BOARDSRC) \
-       $(CHIBIOS)/os/various/evtimer.c \
-       $(CHIBIOS)/os/various/syscalls.c \
+       $(CHIBIOS)/os/various/devices_lib/accel/lis302dl.c \
+       $(CHIBIOS)/os/various/chprintf.c \
        $(wildcard src/*.c)
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
@@ -112,8 +119,8 @@ ASMSRC = $(PORTASM)
 
 INCDIR = $(PORTINC) $(KERNINC) $(TESTINC) \
          $(HALINC) $(PLATFORMINC) $(BOARDINC) \
-         $(CHIBIOS)/os/various \
-         config boards src
+         $(CHIBIOS)/os/various/devices_lib/accel \
+         $(CHIBIOS)/os/various
 
 #
 # Project, sources and paths
@@ -123,10 +130,9 @@ INCDIR = $(PORTINC) $(KERNINC) $(TESTINC) \
 # Compiler settings
 #
 
-MCU  = cortex-m3
+MCU  = cortex-m4
 
-#TRGT = arm-elf-
-TRGT = arm-none-eabi-
+TRGT = /home/francois/compilers/arm-2013.05/bin/arm-none-eabi-
 CC   = $(TRGT)gcc
 CPPC = $(TRGT)g++
 # Enable loading with g++ only if you need C++ runtime support.
@@ -167,7 +173,7 @@ DDEFS =
 DADEFS =
 
 # List all default directories to look for include files here
-DINCDIR =
+DINCDIR = config
 
 # List the default directory to look for the libraries here
 DLIBDIR =
@@ -201,6 +207,13 @@ ULIBS =
 #
 # End of user defines
 ##############################################################################
+
+ifeq ($(USE_FPU),yes)
+  USE_OPT += -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -fsingle-precision-constant
+  DDEFS += -DCORTEX_USE_FPU=TRUE
+else
+  DDEFS += -DCORTEX_USE_FPU=FALSE
+endif
 
 ifeq ($(USE_FWLIB),yes)
   include $(CHIBIOS)/ext/stm32lib/stm32lib.mk

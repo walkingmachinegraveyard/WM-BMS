@@ -91,7 +91,7 @@
 
 //==============================================================================
 struct ad7280a {
-    uint32_t delay_ms;
+    uint8_t delay_ms;
     uint32_t rxbuf;
     uint32_t txbuf;
     uint32_t cellbalance;
@@ -164,9 +164,9 @@ typedef union ad7280a_packet ad7280a_packet_t;
 // Init AD72
 uint8_t init_ad7280a(ad7280a_t *a);
 // Turn on the AD72
-uint8_t power_up_ad7280a(ad7280a_t *a);
+void power_up_ad7280a(ad7280a_t *a);
 // Turn off the AD72
-uint8_t power_down_ad7280a(ad7280a_t *a);
+void power_down_ad7280a(ad7280a_t *a);
 // Read cell voltage (choose from 1 to 6)
 uint32_t ad7280a_read_cell(uint8_t cell,ad7280a_t *a);
 // Read thermistor (choose therm from 1 to 2)
@@ -180,7 +180,7 @@ void ad7280a_balance_cell_off(uint8_t cell, ad7280a_t *a);
 //==============================================================================
 // Private functions:
 
-uint8_t bus_write(ad7280a_t *a, uint8_t reg, uint32_t data);
+void bus_write(ad7280a_t *a, uint8_t reg, uint32_t data);
 // Compile a crc for the specific packet to send
 uint8_t do_crc8(ad7280a_packet_t *packet, crc_type_t crc);
 // Start a spi exchange between the STM32 and the AD72

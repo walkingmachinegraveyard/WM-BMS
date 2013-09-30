@@ -10,10 +10,11 @@
 //==============================================================================
 struct acs {
     uint32_t delay_ms;
-    uint32_t threshold;   //Current threshold (0A to 102A)
-    uint32_t vi_out;      //Analog Voltage coming from the ACS
-    uint32_t fault;       //Fault State (Active LOW)
-    uint8_t fault_en;     //Enables Overcurrent Faulting when High
+    uint32_t threshold;   // Current threshold (0A to 102A)
+    uint32_t vi_out;      // Analog Voltage coming from the ACS
+    uint32_t vzcr;        // Analog Zero Current Reference
+    uint32_t fault;       // Fault State (Active LOW)
+    uint8_t fault_en;     // Enables Overcurrent Faulting when High
     DACDriver *dd;
     DACConfig *dc;
     ADCDriver *ad;
@@ -32,18 +33,14 @@ typedef struct acs acs_t;
 // Initialise the ACS
 uint8_t acs_init(struct acs *m);
 
-// Current threshold (0A to 102A)
-uint16_t acs_threshold(struct acs *acs, uint8_t amps);
+// Set Current threshold (0A to 102A)
+uint16_t acs_set_threshold(struct acs *acs, uint8_t amps);
 
 // Enables overcurrent faulting on the ACS
 void acs_enable_fault(acs_t *acs);
 
 // Disable overcurrent faulting on the ACS
 void acs_disable_fault(acs_t *acs);
-
-// Conversion Analog à Digitale de l'output VI du ACS
-// Retourne la moyenne de 16 échantillonnages
-uint32_t acs_read_viout(acs_t *acs);
 
 // Read the CurrSens coming from the ACS
 int16_t acs_read_currsens(acs_t *acs);

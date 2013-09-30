@@ -123,6 +123,7 @@ void acs_disable_fault(acs_t *acs) {
 }
 
 static uint8_t acs_init_hw(acs_t *acs) {
+
   acs->dd     = &DACD1;
   acs->dc     = &dac_config;
   acs->vi_out = 0;
@@ -132,6 +133,7 @@ static uint8_t acs_init_hw(acs_t *acs) {
   acs->acg    = &adc_convgroup_config;
   acs->acg2   = &adc_convgroup_config2;
   acs->delay_ms = 100;
+
   // Set output pin for overcurrent fault enable
   palSetGroupMode(GPIOA, PAL_PORT_BIT(3), 0, PAL_MODE_OUTPUT_PUSHPULL);
   acs_disable_fault(acs);
@@ -143,8 +145,6 @@ static uint8_t acs_init_hw(acs_t *acs) {
   palSetGroupMode(GPIOC, PAL_PORT_BIT(0), 0, PAL_MODE_INPUT_ANALOG);
   // Set input pin to analog for the VZCR
   palSetGroupMode(GPIOC, PAL_PORT_BIT(1), 0, PAL_MODE_INPUT_ANALOG);
-
-
 
   return 0;
 }
