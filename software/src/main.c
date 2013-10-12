@@ -45,18 +45,18 @@ static void cell_monitor(void *arg) {
 
 // Main Thread
 int main(int argc, char *argv[]) {
-  // Init OS
+//  // Init OS
   halInit();
   chSysInit();
-
-  // Init BMS
-  init_bms(&bms);
-  init_ad7280a(&ad72);
-  battery_init(cells);
-
-  // CellMonitor Thread
-  chThdCreateStatic(cell_monitor_wa, sizeof(cell_monitor_wa),
-                    NORMALPRIO, cell_monitor, NULL);
+//
+//  // Init BMS
+//  init_bms(&bms);
+//  init_ad7280a(&ad72);
+//  battery_init(cells);
+//
+//  // CellMonitor Thread
+//  chThdCreateStatic(cell_monitor_wa, sizeof(cell_monitor_wa),
+//                    NORMALPRIO, cell_monitor, NULL);
 
 //  // CurrentMonitor Thread
 //  chThdCreateStatic(current_monitor_wa, sizeof(current_monitor_wa),
@@ -64,10 +64,11 @@ int main(int argc, char *argv[]) {
 
   // Infinite loop
   while (true) {
-    chThdSleepMilliseconds(133);
-    battery_check_voltage(&ad72,cells);
-    chThdSleepMilliseconds(133);
+ //   chThdSleepMilliseconds(133);
+//    battery_check_voltage(&ad72,cells);
+//    chThdSleepMilliseconds(133);
 
   }
     return 0;
 }
+

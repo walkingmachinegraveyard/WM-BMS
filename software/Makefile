@@ -67,7 +67,7 @@ SRC = src
 
 # Imported source files and paths
 CHIBIOS = ../ChibiOS
-include $(CHIBIOS)/boards/ST_STM32F4_DISCOVERY/board.mk
+include ../software/boards/bms/board.mk
 include $(CHIBIOS)/os/hal/platforms/STM32F4xx/platform.mk
 include $(CHIBIOS)/os/hal/hal.mk
 include $(CHIBIOS)/os/ports/GCC/ARMCMx/STM32F4xx/port.mk
@@ -133,8 +133,8 @@ INCDIR = $(PORTINC) $(KERNINC) $(TESTINC) \
 MCU  = cortex-m4
 
 TRGT = arm-none-eabi-
-CC   = $(TRGT)gcc
-CPPC = $(TRGT)g++
+CC   = $(TRGT)gcc -O0
+CPPC = $(TRGT)g++ -O0
 # Enable loading with g++ only if you need C++ runtime support.
 # NOTE: You can use C++ even without C++ support if you are careful. C++
 #       runtime support makes code size explode.

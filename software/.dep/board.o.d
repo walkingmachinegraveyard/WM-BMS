@@ -1,6 +1,5 @@
-build/obj/board.o: ../ChibiOS/boards/ST_STM32F4_DISCOVERY/board.c \
- ../ChibiOS/os/kernel/include/ch.h config/chconf.h \
- ../ChibiOS/os/ports/GCC/ARMCMx/chtypes.h \
+build/obj/board.o: boards/bms/board.c ../ChibiOS/os/kernel/include/ch.h \
+ config/chconf.h ../ChibiOS/os/ports/GCC/ARMCMx/chtypes.h \
  /usr/bin/../lib/gcc/arm-none-eabi/4.7.4/include/stddef.h \
  /usr/bin/../lib/gcc/arm-none-eabi/4.7.4/include/stdint.h \
  /usr/bin/../lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/include/stdint.h \
@@ -35,8 +34,8 @@ build/obj/board.o: ../ChibiOS/boards/ST_STM32F4_DISCOVERY/board.c \
  ../ChibiOS/os/kernel/include/chstreams.h \
  ../ChibiOS/os/kernel/include/chfiles.h \
  ../ChibiOS/os/kernel/include/chdebug.h ../ChibiOS/os/hal/include/hal.h \
- ../ChibiOS/boards/ST_STM32F4_DISCOVERY/board.h config/halconf.h \
- config/mcuconf.h ../ChibiOS/os/hal/platforms/STM32F4xx/hal_lld.h \
+ boards/bms/board.h config/halconf.h config/mcuconf.h \
+ ../ChibiOS/os/hal/platforms/STM32F4xx/hal_lld.h \
  ../ChibiOS/os/hal/platforms/STM32/stm32.h \
  ../ChibiOS/os/hal/platforms/STM32F4xx/stm32f4xx.h \
  ../ChibiOS/os/ports/common/ARMCMx/CMSIS/include/core_cm4.h \
@@ -145,7 +144,7 @@ config/chconf.h:
 
 ../ChibiOS/os/hal/include/hal.h:
 
-../ChibiOS/boards/ST_STM32F4_DISCOVERY/board.h:
+boards/bms/board.h:
 
 config/halconf.h:
 
