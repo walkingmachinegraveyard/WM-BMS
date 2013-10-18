@@ -22,3 +22,6 @@ cmake_install.cmake
 .project
 .pydevproject
 .settings/
+.dep
+.metadata
+*.o.d

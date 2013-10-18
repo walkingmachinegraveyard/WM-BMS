@@ -21,7 +21,7 @@
  * NOTE: The LSE crystal is not fitted by default on the board.
  */
 #define STM32_LSECLK            0
-#define STM32_HSECLK            8000000
+#define STM32_HSECLK            12000000
 
 /*
  * Board voltages.
