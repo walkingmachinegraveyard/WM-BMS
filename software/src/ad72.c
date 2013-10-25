@@ -180,18 +180,21 @@ uint32_t ad7280a_read_cell(uint8_t cell,ad7280a_t *a) {
   ad7280a_packet_t packet;
   packet.packed = 0;
 
-  // 1. Turn off the read operation
-  bus_write(a, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
-            | AD7280A_CONTROL_CONV_INPUT_READ_DISABLE, 1);
-
-  // 2.On ecrit le numero de registre de la cellule
+  // 1.On ecrit le numero de registre de la cellule
   bus_write(a, AD7280A_READ, ((cell-1) << 2) , 0);
 
-  // 3.Set Bits[D13:D12] of the control to 10
-  bus_write(a, AD7280A_CONTROL, 0xA0 , 0);
+  // 2. Turn off the read operation
+  bus_write(a, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_0ADC
+            | AD7280A_CONTROL_CONV_INPUT_READ_DISABLE, 1);
+
+  // 3.Control Register Settings
+  bus_write(a, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
+            | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_6ADC
+            | AD7280A_CONTROL_CONV_START_FORMAT_CNVST
+            | AD7280A_CONTROL_CONV_AVG_BY_8, 0);
 
   // 4.Program the CNVST control register to 0x02 to allow a single pulse
-  bus_write(a, AD7280A_CNVST_CONTROL, 0x02 , 0);
+  bus_write(a, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_SINGLE, 0);
 
   // 5.Initiate conversions through the falling edge of CNVST.
   palClearPad(GPIOB,0);
@@ -203,11 +206,10 @@ uint32_t ad7280a_read_cell(uint8_t cell,ad7280a_t *a) {
   palSetPad(GPIOB,0);
 
   // 6 Gate the CNVST, this prevents unintentional conversions
-  a->txbuf = 0x03A0340A;
-  spi_exchange(a);
+  bus_write(a, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_GATED, 0);
 
   //7. On applique 32 SCLKs pour avoir la lecture dans le rxbuf
-  (a->txbuf) = 0xF800030A; // (aucun data/registres)
+  (a->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (aucun data/registres)
   spi_exchange(a);
   packet.packed = (a->rxbuf);
 
@@ -221,7 +223,7 @@ uint32_t ad7280a_read_register(uint8_t address,ad7280a_t *a) {
   packet.packed = 0;
 
   // 1. Turn off the read operation
-  bus_write(a, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
+  bus_write(a, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_0ADC
             | AD7280A_CONTROL_CONV_INPUT_READ_DISABLE, 1);
 
   // 2. Turn on the read operation on the addressed part

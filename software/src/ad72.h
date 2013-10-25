@@ -90,6 +90,19 @@
 #define AD7280A_CONTROL_CHAIN_REG_READBACK_ENABLE       (0x01 << 0)
 
 //==============================================================================
+// CNVST Control Register Settings
+//==============================================================================
+//CNVST input not gated (default)
+#define AD7280A_CNVST_CTRL_NOT_GATED                    0x00
+//CNVST input gated
+#define AD7280A_CNVST_CTRL_GATED                        0x01
+//Allow single CNVST pulse
+#define AD7280A_CNVST_CTRL_SINGLE                       0x02
+//==============================================================================
+
+#define AD7280A_RETRANSMIT_SCLKS                        0xF800030A
+
+
 struct ad7280a {
     uint8_t delay_ms;
     uint32_t rxbuf;
@@ -100,7 +113,6 @@ struct ad7280a {
 };
 typedef struct ad7280a ad7280a_t;
 
-//Attention! Le CRC est différent selon le type de communication SPI
 enum crc_type {
     WRITE_REGISTER,
     READ_CONVERSION,
@@ -147,6 +159,7 @@ struct ad7280a_crc_write_data_bitfield {
     uint32_t padding: 11; //Not used during CRC
     uint32_t data: 21;
 };
+
 //==============================================================================
 union ad7280a_packet {
   uint32_t packed;
@@ -167,6 +180,8 @@ uint8_t init_ad7280a(ad7280a_t *a);
 void power_up_ad7280a(ad7280a_t *a);
 // Turn off the AD72
 void power_down_ad7280a(ad7280a_t *a);
+// Read a Single Configuration Register
+uint32_t ad7280a_read_register(uint8_t address,ad7280a_t *a);
 // Read cell voltage (choose from 1 to 6)
 uint32_t ad7280a_read_cell(uint8_t cell,ad7280a_t *a);
 // Read thermistor (choose therm from 1 to 2)
@@ -180,7 +195,7 @@ void ad7280a_balance_cell_off(uint8_t cell, ad7280a_t *a);
 //==============================================================================
 // Private functions:
 
-void bus_write(ad7280a_t *a, uint8_t reg, uint32_t data);
+void bus_write(ad7280a_t *a, uint8_t reg, uint32_t data, uint32_t write_all);
 // Compile a crc for the specific packet to send
 uint8_t do_crc8(ad7280a_packet_t *packet, crc_type_t crc);
 // Start a spi exchange between the STM32 and the AD72
