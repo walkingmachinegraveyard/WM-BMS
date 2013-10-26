@@ -53,6 +53,7 @@
 #define GPIOB_SCL               6
 #define GPIOB_SDA               9
 #define GPIOB_SCK               10
+#define GPIOB_CNVST             0
 
 #define GPIOC_OTG_FS_POWER_ON   0
 #define GPIOC_DOUT              3
@@ -161,7 +162,7 @@
  * PB6  - GPIOB_SCL             (alternate 4).
  * PB9  - GPIOB_SDA             (alternate 4).
  */
-#define VAL_GPIOB_MODER     (PIN_MODE_INPUT(0) |                            \
+#define VAL_GPIOB_MODER     (PIN_MODE_OUTPUT(GPIOB_CNVST) |                            \
                              PIN_MODE_INPUT(1) |                            \
                              PIN_MODE_INPUT(2) |                            \
                              PIN_MODE_ALTERNATE(GPIOB_SWO) |                \
@@ -465,6 +466,8 @@
 #define VAL_GPIOI_ODR       0xFFFFFFFF
 #define VAL_GPIOI_AFRL      0x00000000
 #define VAL_GPIOI_AFRH      0x00000000
+
+#define SPI1_CS_PIN         4
 
 #if !defined(_FROM_ASM_)
 #ifdef __cplusplus

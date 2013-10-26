@@ -109,7 +109,6 @@ struct ad7280a {
     uint32_t txbuf;
     uint32_t cellbalance;
     uint32_t on_off;
-    uint32_t test;
 };
 typedef struct ad7280a ad7280a_t;
 
@@ -175,21 +174,21 @@ typedef union ad7280a_packet ad7280a_packet_t;
 // Public Functions:
 
 // Init AD72
-uint8_t init_ad7280a(ad7280a_t *a);
+uint8_t init_ad7280a(ad7280a_t *ad72);
 // Turn on the AD72
-void power_up_ad7280a(ad7280a_t *a);
+void power_up_ad7280a(ad7280a_t *ad72);
 // Turn off the AD72
-void power_down_ad7280a(ad7280a_t *a);
+void power_down_ad7280a(ad7280a_t *ad72);
 // Read a Single Configuration Register
-uint32_t ad7280a_read_register(uint8_t address,ad7280a_t *a);
+uint32_t ad7280a_read_register(uint8_t address,ad7280a_t *ad72);
 // Read cell voltage (choose from 1 to 6)
-uint32_t ad7280a_read_cell(uint8_t cell,ad7280a_t *a);
+uint32_t ad7280a_read_cell(uint8_t cell,ad7280a_t *ad72);
 // Read thermistor (choose therm from 1 to 2)
-uint32_t ad7280a_read_therm(uint8_t therm,ad7280a_t *a);
+uint32_t ad7280a_read_therm(uint8_t therm,ad7280a_t *ad72);
 // Activate cell balance (choose from 1 to 6)
-void ad7280a_balance_cell_on(uint8_t cell, ad7280a_t *a);
+void ad7280a_balance_cell_on(uint8_t cell, ad7280a_t *ad72);
 // Deactivate cell balance (choose from 1 to 6)
-void ad7280a_balance_cell_off(uint8_t cell, ad7280a_t *a);
+void ad7280a_balance_cell_off(uint8_t cell, ad7280a_t *ad72);
 //==============================================================================
 
 //==============================================================================
@@ -199,9 +198,9 @@ void bus_write(ad7280a_t *a, uint8_t reg, uint32_t data, uint32_t write_all);
 // Compile a crc for the specific packet to send
 uint8_t do_crc8(ad7280a_packet_t *packet, crc_type_t crc);
 // Start a spi exchange between the STM32 and the AD72
-uint32_t spi_exchange(ad7280a_t *a);
+uint32_t spi_exchange(ad7280a_t *ad72);
 // Test the received crc if it matches the packet
-uint8_t crc_conv_check(ad7280a_t *a);
+uint8_t crc_conv_check(ad7280a_t *ad72);
 //==============================================================================
 
 
