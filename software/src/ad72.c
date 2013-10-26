@@ -89,11 +89,13 @@ uint8_t crc_conv_check(ad7280a_t *ad72) {
   return 1;
 }
 
-// Low speed SPI configuration BR[2..0] = 111 (Lowest speed)
-// CPHA=1, CPOL=0, MSb first, 8 bits Data Frame
+/**
+ * Low speed SPI configuration BR[2..0] = 111 (Lowest speed)
+ * CPHA=1, CPOL=0, MSb first, 8 bits Data Frame
+ */
 static const SPIConfig ls_spicfg = {
-  NULL,   // No callback
-  GPIOC,  // CS Port ID
+  NULL,         // No callback
+  GPIOC,        // CS Port ID
   SPI1_CS_PIN,  // CS Pin  ID
 
   // SPI Speed configurations (Lowest speed)
@@ -106,6 +108,11 @@ static const SPIConfig ls_spicfg = {
   SPI_CR1_DFF
 };
 
+/**
+ * SPI_Exchange function (Simultaneous Tx/Rx)
+ * @param ad72
+ * @return Returns the receive buffer
+ */
 uint32_t spi_exchange(ad7280a_t *ad72) {
   uint8_t i;
 
@@ -114,10 +121,9 @@ uint32_t spi_exchange(ad7280a_t *ad72) {
   uint16_t rx_split_buf[2] = {0,0};
   uint16_t tx_split_buf[2] = {0,0};
 
+  // Split the buffer in two buffer of two bytes each
   tx_split_buf[0] = ad72->txbuf >> 16;
   tx_split_buf[1] = ad72->txbuf;
-
-
 
   // Spi Exchange
   spiAcquireBus(&SPID1);                             /* Acquire ownership of the bus.    */
@@ -131,62 +137,61 @@ uint32_t spi_exchange(ad7280a_t *ad72) {
   ad72->rxbuf = ad72->rxbuf << 16;
   ad72->rxbuf |= rx_split_buf[1];
 
+  // A simple delay to prevent the SPI from overflowing
   chThdSleepMilliseconds(ad72->delay_ms);
 
   return ad72->rxbuf;
 }
 
-// Power up the ad7280a by putting the powerdown pin to high
+/**
+ * Power up the ad7280a by putting the powerdown pin to high
+ * @param ad72 The address of the ad72 device
+ */
 void power_up_ad7280a(ad7280a_t *ad72) {
   palSetPad(GPIOB,1);
   ad72->on_off = 1;
 }
 
-// Power down the ad7280a by putting the powerdown pin to low
+/**
+ * Power down the ad7280a by putting the powerdown pin to low
+ * @param ad72 The address of the ad72 device
+ */
 void power_down_ad7280a(ad7280a_t *ad72) {
   palClearPad(GPIOB,1);
   ad72->on_off = 0;
 }
 
-// Initialize the ad7280
+/**
+ * Initialize the ad7280
+ * @param ad72 The address of the ad72 device
+ * @return
+ */
 uint8_t init_ad7280a(ad7280a_t *ad72) {
-
   ad72->delay_ms = 10;
   ad72->txbuf = 0;
   ad72->rxbuf = 0;
   ad72->cellbalance = 0;
   power_up_ad7280a(ad72);
 
-  spiStart(&SPID1, &ls_spicfg);                      /* Setup transfer parameters.       */
+  // Setup transfer parameters
+  spiStart(&SPID1, &ls_spicfg);
 
-
-  //Software reset
+  // Software reset
   (ad72->txbuf) = 0x01D2B412;
   spi_exchange(&ad72);
   (ad72->txbuf) = 0x01C2B6E2;
   spi_exchange(&ad72);
 
-
-//  // set Bit D2 and Bit D0 of the control register to 1
-//  // and set Bit D1 of the control
-//  (ad72->txbuf) = 0x01C2B6E2;
-//  spi_exchange(ad72);
-//
-//  // Write the register address corresponding to the lower byte
-//  // of the control register to the read register on all parts.
-//  (ad72->txbuf) = 0x038716CA;
-//  spi_exchange(ad72);
-//
-//  // Apply ad72 CS low pulse that frames 32 SCLKs
-//  // (This is used to verify that the ad7280a has received and
-//  // locked his unique address)
-//  (ad72->txbuf) = 0xF800030A;
-//  spi_exchange(ad72);
-
   return 1;
 }
 
-// Write to ad72 specific register
+/**
+ * Write to a specific register
+ * @param ad72 The address of the ad72 device
+ * @param reg The register address you want to write in
+ * @param data The data you want to write to the register
+ * @param write_all Write_All bit 1 : 0
+ */
 void bus_write(ad7280a_t *ad72, uint8_t reg, uint32_t data, uint32_t write_all) {
   ad7280a_packet_t packet;
   crc_type_t crc = WRITE_REGISTER;
@@ -202,7 +207,13 @@ void bus_write(ad7280a_t *ad72, uint8_t reg, uint32_t data, uint32_t write_all) 
   spi_exchange(ad72);
 }
 
-// Read cell voltage (choose from 1 to 6)
+/**
+ * Read cell voltage
+ * LSB = 4/4095 V
+ * @param cell Cell # (choose from 1 to 6)
+ * @param ad72 The address of the ad72 device
+ * @return Returns the value of the cell
+ */
 uint32_t ad7280a_read_cell(uint8_t cell,ad7280a_t *ad72) {
   ad7280a_packet_t packet;
   packet.packed = 0;
@@ -243,7 +254,12 @@ uint32_t ad7280a_read_cell(uint8_t cell,ad7280a_t *ad72) {
   return packet.r_conversion.conversion_data;
 }
 
-// Read ad72 Single Configuration Register
+/**
+ * Read ad72 Single Configuration Register
+ * @param address Adress of the register
+ * @param ad72 The address of the ad72 device
+ * @return Return the value of the register read
+ */
 uint32_t ad7280a_read_register(uint8_t address,ad7280a_t *ad72) {
 
   ad7280a_packet_t packet;
@@ -268,18 +284,31 @@ uint32_t ad7280a_read_register(uint8_t address,ad7280a_t *ad72) {
   return packet.r_register.data;
 }
 
-// Read thermistor (choose therm from 1 to 2)
+/**
+ * Read thermistor
+ * @param therm (choose therm from 1 to 2)
+ * @param ad72 The address of the ad72 device
+ * @return Return the therm read value
+ */
 uint32_t ad7280a_read_therm(uint8_t therm,ad7280a_t *ad72) {
   return ad7280a_read_cell((therm+6),ad72);
 }
 
-// Activate cell balance (choose from 1 to 6)
+/**
+ * Activate cell balance
+ * @param cell Choose the cell to start balancing (1 to 6)
+ * @param ad72 The address of the ad72 device
+ */
 void ad7280a_balance_cell_on(uint8_t cell, ad7280a_t *ad72) {
   ad72->cellbalance |= (1<<(cell+1));
   bus_write(ad72, AD7280A_CELL_BALANCE, ad72->cellbalance , 0);
 }
 
-// Deactivate cell balance (choose from 1 to 6)
+/**
+ * Deactivate cell balance
+ * @param cell Choose the cell to stop balancing (1 to 6)
+ * @param ad72 The address of the ad72 device
+ */
 void ad7280a_balance_cell_off(uint8_t cell, ad7280a_t *ad72) {
   ad72->cellbalance &= ~(1<<(cell+1));
   bus_write(ad72, AD7280A_CELL_BALANCE, ad72->cellbalance, 0);

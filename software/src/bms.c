@@ -17,6 +17,9 @@ void init_bms(bms_t *bms) {
   // Set the PowerDown Pin for AD7280a
   palSetGroupMode(GPIOB, PAL_PORT_BIT(1), 0, PAL_MODE_OUTPUT_PUSHPULL);
 
+  // Set the CNVST Pin for AD7280a
+  palSetGroupMode(GPIOB, PAL_PORT_BIT(0), 0, PAL_MODE_OUTPUT_PUSHPULL);
+
   palSetGroupMode(GPIOD, PAL_PORT_BIT(6), 0, PAL_MODE_OUTPUT_PUSHPULL);
   palSetPad(GPIOD,6);              // SelfPower
 
