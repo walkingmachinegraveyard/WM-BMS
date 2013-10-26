@@ -19,6 +19,10 @@ static void cell_monitor(void *arg) {
   while (true) {
   //  battery_check_voltage(&ad72,cells);
     chThdSleepMilliseconds(1337);
+    chThdSleepMilliseconds(1337);
+    chThdSleepMilliseconds(1337);
+    chThdSleepMilliseconds(1337);
+    chThdSleepMilliseconds(1337);
   }
 
 }
