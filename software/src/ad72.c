@@ -97,7 +97,7 @@ static const SPIConfig ls_spicfg = {
   SPI1_CS_PIN,  // CS Pin  ID
 
   // SPI Speed configurations (Lowest speed)
-  SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0 |
+  SPI_CR1_BR_2 | SPI_CR1_BR_1 |
 
   // SPI Phase configuration
   SPI_CR1_CPHA |
@@ -126,13 +126,12 @@ uint32_t spi_exchange(ad7280a_t *ad72) {
   spiUnselect(&SPID1);                               /* Slave Select de-assertion.       */
   spiReleaseBus(&SPID1);                             /* Ownership release.               */
 
-  // Short sleep to allow proper data transfer
-  chThdSleepMilliseconds(ad72->delay_ms);
-
   // Merge the four bytes received
-  ad72->rxbuf = rx_split_buf[1];
+  ad72->rxbuf = rx_split_buf[0];
   ad72->rxbuf = ad72->rxbuf << 16;
-  ad72->rxbuf |= rx_split_buf[0];
+  ad72->rxbuf |= rx_split_buf[1];
+
+  chThdSleepMilliseconds(ad72->delay_ms);
 
   return ad72->rxbuf;
 }
@@ -160,21 +159,29 @@ uint8_t init_ad7280a(ad7280a_t *ad72) {
 
   spiStart(&SPID1, &ls_spicfg);                      /* Setup transfer parameters.       */
 
-  // set Bit D2 and Bit D0 of the control register to 1
-  // and set Bit D1 of the control
+
+  //Software reset
+  (ad72->txbuf) = 0x01D2B412;
+  spi_exchange(&ad72);
   (ad72->txbuf) = 0x01C2B6E2;
-  spi_exchange(ad72);
+  spi_exchange(&ad72);
 
-  // Write the register address corresponding to the lower byte
-  // of the control register to the read register on all parts.
-  (ad72->txbuf) = 0x038716CA;
-  spi_exchange(ad72);
 
-  // Apply ad72 CS low pulse that frames 32 SCLKs
-  // (This is used to verify that the ad7280a has received and
-  // locked his unique address)
-  (ad72->txbuf) = 0xF800030A;
-  spi_exchange(ad72);
+//  // set Bit D2 and Bit D0 of the control register to 1
+//  // and set Bit D1 of the control
+//  (ad72->txbuf) = 0x01C2B6E2;
+//  spi_exchange(ad72);
+//
+//  // Write the register address corresponding to the lower byte
+//  // of the control register to the read register on all parts.
+//  (ad72->txbuf) = 0x038716CA;
+//  spi_exchange(ad72);
+//
+//  // Apply ad72 CS low pulse that frames 32 SCLKs
+//  // (This is used to verify that the ad7280a has received and
+//  // locked his unique address)
+//  (ad72->txbuf) = 0xF800030A;
+//  spi_exchange(ad72);
 
   return 1;
 }
@@ -211,7 +218,7 @@ uint32_t ad7280a_read_cell(uint8_t cell,ad7280a_t *ad72) {
   bus_write(ad72, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
             | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_6ADC
             | AD7280A_CONTROL_CONV_START_FORMAT_CNVST
-            | AD7280A_CONTROL_CONV_AVG_SINGLE, 0);
+            | AD7280A_CONTROL_CONV_AVG_BY_8, 0);
 
   // 4.Program the CNVST control register to 0x02 to allow ad72 single pulse
   bus_write(ad72, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_SINGLE, 0);
