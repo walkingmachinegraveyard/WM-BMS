@@ -12,26 +12,71 @@
 
 #include "ad72.h"
 #include "cell_mon.h"
+#include "therm.h"
 
-// Thread configuration
-static WORKING_AREA(cell_monitor_wa, 128);
+void cell_update(battery_t cell[], therm_t therm[], ad7280a_t *ad72) {
+  uint8_t i;
 
-static void cell_monitor(void *arg) {
-    // Remove a warning...
-    (void) arg;
+  for(i=0; i<6; i++){
+    // Check the cell voltage
+    cell[i].voltage = ad7280a_read_cell(&cell[i],ad72);
 
-    // Thread loop
-    while (true) {
-        // Do something!
-        chThdSleepMilliseconds(100);
+    // Confirm the presence of the battery
+    if(ad7280a_read_cell(&cell[i],ad72))
+    cell[i].present = 0;
+
+    // Check the temperature of the cell
+    therm_read_temp(therm,ad72);
+    if(therm[1].temperature > therm[2].temperature) {
+      cell[i].temperature = therm[1].temperature;
     }
+    else {
+      cell[i].temperature = therm[2].temperature;
+    }
+
+    // Check the status of the cell
+    //bat[i].status = USE THE CAN BUS
+
+    //===================================
+    // Update the health of the battery
+    //===================================
+    cell[i].health = BATTERY_HEALTH_GOOD;
+
+    // Overheat Check:
+    if(cell[i].temperature > MAX_TEMP)
+    cell[i].health = BATTERY_HEALTH_OVERHEAT;
+
+    // OverVoltage Check:
+    if(cell[i].voltage > CHARGING_COMPLETE)
+    cell[i].health = BATTERY_HEALTH_OVER_VOLTAGE;
+
+    // UnderVoltage Check:
+    if(cell[i].voltage < MINIMAL_VOLTAGE)
+    cell[i].health = BATTERY_HEALTH_UNDER_VOLTAGE;
+  }
 }
 
 /**
- * Initialize cell monitior
+ * Verify the cell during the charge cycle
+ * @param cell The address of the cell to verify
+ * @param ad7280a The address of the ad7280a
  */
-void cell_mon_init(cell_mon_t *cmon, ad7280a_t *ad7280a) {
-    cmon->ad7280a = ad7280a;
+void cell_check_charging(battery_t *cell, ad7280a_t *ad7280a) {
 
-    chThdCreateStatic(cell_monitor_wa, sizeof(cell_monitor_wa), NORMALPRIO, cell_monitor, NULL);
+  if(cell->is_balancing == BATTERY_IS_BALANCING) {
+    if(cell->voltage <= CHARGING_INCOMPLETE) // If the cell voltage is over 4100mV
+      ad7280a_balance_cell_off(cell, ad7280a);
+    }
+    else {
+      return;
+    }
+
+  if(cell->is_balancing == BATTERY_IS_NOT_BALANCING) {
+    if(cell->voltage >= CHARGING_COMPLETE) { // If the cell voltage is over 4200mV
+      ad7280a_balance_cell_on(cell, ad7280a);
+    }
+    else {
+      return;
+    }
+  }
 }

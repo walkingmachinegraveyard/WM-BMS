@@ -5,8 +5,8 @@
  *      Author: francois
  */
 
-
-
+#include "hal.h"
+#include "ch.h"
 #include "bms.h"
 void init_bms(bms_t *bms) {
 
@@ -32,5 +32,8 @@ void init_bms(bms_t *bms) {
   palSetPadMode(GPIOA, 7, PAL_MODE_ALTERNATE(5) |
   PAL_STM32_OSPEED_HIGHEST);       // MOSI
 
+  // Setup the LED default state
+  palSetPad(GPIOE,GPIOE_GREEN_LED);
+  palClearPad(GPIOE,GPIOE_RED_LED);
 
 }

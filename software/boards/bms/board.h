@@ -71,6 +71,8 @@
 #define GPIOE_INT1              0
 #define GPIOE_INT2              1
 #define GPIOE_CS_SPI            3
+#define GPIOE_GREEN_LED         4
+#define GPIOE_RED_LED           5
 
 #define GPIOH_OSC_IN            0
 #define GPIOH_OSC_OUT           1
@@ -308,8 +310,8 @@
                              PIN_MODE_INPUT(GPIOE_INT2) |                   \
                              PIN_MODE_INPUT(2) |                            \
                              PIN_MODE_OUTPUT(GPIOE_CS_SPI) |                \
-                             PIN_MODE_INPUT(4) |                            \
-                             PIN_MODE_INPUT(5) |                            \
+                             PIN_MODE_OUTPUT(GPIOE_GREEN_LED) |                            \
+                             PIN_MODE_OUTPUT(GPIOE_RED_LED)  |                            \
                              PIN_MODE_INPUT(6) |                            \
                              PIN_MODE_INPUT(7) |                            \
                              PIN_MODE_INPUT(8) |                            \

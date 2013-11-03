@@ -2,8 +2,14 @@
 #define AD72_H
 
 #include <stdint.h>
-#include "ch.h"
+// ChibiOS
 #include "hal.h"
+#include "ch.h"
+// Local
+#include "bms.h"
+#include "battery.h"
+
+
 //==============================================================================
 //
 // REGISTERS
@@ -102,22 +108,19 @@
 
 #define AD7280A_RETRANSMIT_SCLKS                        0xF800030A
 
-
-struct ad7280a {
+typedef struct ad7280a {
     uint8_t delay_ms;
     uint32_t rxbuf;
     uint32_t txbuf;
     uint32_t cellbalance;
     uint32_t on_off;
-};
-typedef struct ad7280a ad7280a_t;
+} ad7280a_t;
 
-enum crc_type {
+typedef enum crc_type {
     WRITE_REGISTER,
     READ_CONVERSION,
     READ_REGISTER,
-};
-typedef enum crc_type crc_type_t;
+}crc_type_t;
 
 //============BitFields=========================================================
 struct ad7280a_write_register_bitfield {
@@ -182,13 +185,13 @@ void power_down_ad7280a(ad7280a_t *ad72);
 // Read a Single Configuration Register
 uint32_t ad7280a_read_register(uint8_t address,ad7280a_t *ad72);
 // Read cell voltage (choose from 1 to 6)
-uint32_t ad7280a_read_cell(uint8_t cell,ad7280a_t *ad72);
+uint32_t ad7280a_read_cell(battery_t *cell,ad7280a_t *ad72);
 // Read thermistor (choose therm from 1 to 2)
-uint32_t ad7280a_read_therm(uint8_t therm,ad7280a_t *ad72);
+uint32_t ad7280a_read_therm(therm_t *therm, ad7280a_t *ad72);
 // Activate cell balance (choose from 1 to 6)
-void ad7280a_balance_cell_on(uint8_t cell, ad7280a_t *ad72);
+void ad7280a_balance_cell_on(battery_t *cell, ad7280a_t *ad72);
 // Deactivate cell balance (choose from 1 to 6)
-void ad7280a_balance_cell_off(uint8_t cell, ad7280a_t *ad72);
+void ad7280a_balance_cell_off(battery_t *cell, ad7280a_t *ad72);
 //==============================================================================
 
 //==============================================================================
