@@ -39,10 +39,13 @@
  */
 #define GPIOA_BUTTON            0
 #define GPIOA_LRCK              4
+#define GPIOA_FAULT             3
+#define GPIOA_VOC               4
 #define GPIOA_SPC               5
 #define GPIOA_SDO               6
 #define GPIOA_SDI               7
 #define GPIOA_VBUS_FS           9
+#define GPIOC_OTG_FS_POWER_ON   0
 #define GPIOA_OTG_FS_ID         10
 #define GPIOA_OTG_FS_DM         11
 #define GPIOA_OTG_FS_DP         12
@@ -55,7 +58,8 @@
 #define GPIOB_SCK               10
 #define GPIOB_CNVST             0
 
-#define GPIOC_OTG_FS_POWER_ON   0
+#define GPIOC_CURR_SENS         0
+#define GPIOC_VZCR              1
 #define GPIOC_DOUT              3
 #define GPIOC_MCLK              7
 #define GPIOC_SCLK              10

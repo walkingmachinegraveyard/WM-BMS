@@ -7,7 +7,7 @@
 #include "ch.h"
 // Local
 #include "bms.h"
-#include "battery.h"
+#include "cell.h"
 
 
 //==============================================================================
@@ -185,13 +185,13 @@ void power_down_ad7280a(ad7280a_t *ad72);
 // Read a Single Configuration Register
 uint32_t ad7280a_read_register(uint8_t address,ad7280a_t *ad72);
 // Read cell voltage (choose from 1 to 6)
-uint32_t ad7280a_read_cell(battery_t *cell,ad7280a_t *ad72);
+uint32_t ad7280a_read_cell(cell_t *cell,ad7280a_t *ad72);
 // Read thermistor (choose therm from 1 to 2)
 uint32_t ad7280a_read_therm(therm_t *therm, ad7280a_t *ad72);
 // Activate cell balance (choose from 1 to 6)
-void ad7280a_balance_cell_on(battery_t *cell, ad7280a_t *ad72);
+void ad7280a_balance_cell_on(cell_t *cell, ad7280a_t *ad72);
 // Deactivate cell balance (choose from 1 to 6)
-void ad7280a_balance_cell_off(battery_t *cell, ad7280a_t *ad72);
+void ad7280a_balance_cell_off(cell_t *cell, ad7280a_t *ad72);
 //==============================================================================
 
 //==============================================================================

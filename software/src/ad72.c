@@ -1,14 +1,15 @@
 /**
- * Battery management system, Walking Machine, Ecole de Technologie Superieure
+ * cell management system, Walking Machine, Ecole de Technologie Superieure
  * Copyright (C) 2013 Francois Killeen
- * AD72
+ * ad72.c
  */
 
 // C Standard
 #include <stdint.h>
 
+#include "ch.h"
+#include "hal.h"
 #include "ad72.h"
-
 
 #define CRC_DATA_WRITE 21
 #define CRC_DATA_READ 22
@@ -135,7 +136,7 @@ uint32_t spi_exchange(ad7280a_t *ad72) {
   ad72->rxbuf |= rx_split_buf[1];
 
   // A simple delay to prevent the SPI from overflowing
-  chThdSleepMilliseconds(ad72->delay_ms);
+  //chThdSleepMilliseconds(ad72->delay_ms);
 
   return ad72->rxbuf;
 }
@@ -187,7 +188,7 @@ uint8_t init_ad7280a(ad7280a_t *ad72) {
  * @param ad72 The address of the ad72 device
  * @param reg The register address you want to write in
  * @param data The data you want to write to the register
- * @param write_all Write_All bit 1 : 0
+ * @param write_all Write All bit 1 : 0
  */
 void bus_write(ad7280a_t *ad72, uint8_t reg, uint32_t data, uint32_t write_all) {
   ad7280a_packet_t packet;
@@ -206,17 +207,17 @@ void bus_write(ad7280a_t *ad72, uint8_t reg, uint32_t data, uint32_t write_all) 
 
 /**
  * Read cell voltage
- * LSB = 4/4095 V
- * @param cell The address of the Cell
- * @param ad72 The address of the ad72 device
- * @return Returns the value of the cell
+ * LSB = 4/4095 V + 1000mV
+ * @param cell The address of the Cell you want to measure
+ * @param ad72 The address of the ad7280a device
+ * @return Returns the value of the cell in millivolts
  */
-uint32_t ad7280a_read_cell(battery_t *cell,ad7280a_t *ad72) {
+uint32_t ad7280a_read_cell(cell_t *cell,ad7280a_t *ad72) {
   ad7280a_packet_t packet;
   packet.packed = 0;
 
   // 1.On ecrit le numero de registre de la cellule
-  bus_write(ad72, AD7280A_READ, ((cell->cell_id)-1) << 2, WRITE_ALL_DISABLED);
+  bus_write(ad72, AD7280A_READ, (cell->cell_id - 1) << 2, WRITE_ALL_DISABLED);
 
   // 2. Turn off the read operation
   bus_write(ad72, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
@@ -224,7 +225,7 @@ uint32_t ad7280a_read_cell(battery_t *cell,ad7280a_t *ad72) {
 
   // 3.Control Register Settings
   bus_write(ad72, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
-            | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_6ADC
+            | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_135ADC
             | AD7280A_CONTROL_CONV_START_FORMAT_CNVST
             | AD7280A_CONTROL_CONV_AVG_BY_8, WRITE_ALL_DISABLED);
 
@@ -250,9 +251,11 @@ uint32_t ad7280a_read_cell(battery_t *cell,ad7280a_t *ad72) {
   spi_exchange(ad72);
   packet.packed = (ad72->rxbuf);
 
-  cell->voltage = packet.r_conversion.conversion_data;
+  //0.9765mV par LSB + 1000mV offset
+  cell->voltage = ((packet.r_conversion.conversion_data * 0.975) + 1000);
 
-  return packet.r_conversion.conversion_data;
+
+  return cell->voltage;
 }
 
 /**
@@ -297,7 +300,8 @@ uint32_t ad7280a_read_therm(therm_t *therm, ad7280a_t *ad72) {
     packet.packed = 0;
 
     // 1.On ecrit le numero de registre de la cellule
-    bus_write(ad72, AD7280A_READ, ((therm->therm_id+6)-1) << 2, WRITE_ALL_DISABLED);
+    bus_write(ad72, AD7280A_READ, ((therm->therm_id+6)-1) << 2,
+             WRITE_ALL_DISABLED);
 
     // 2. Turn off the read operation
     bus_write(ad72, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
@@ -330,28 +334,36 @@ uint32_t ad7280a_read_therm(therm_t *therm, ad7280a_t *ad72) {
     (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
     spi_exchange(ad72);
     packet.packed = (ad72->rxbuf);
-
     return packet.r_conversion.conversion_data;
 }
 
 /**
- * Activate cell balance
+ * Activate a single cell balance
  * @param cell The address of the cell to start balancing
  * @param ad72 The address of the ad72 device
  */
-void ad7280a_balance_cell_on(battery_t *cell, ad7280a_t *ad72) {
+void ad7280a_balance_cell_on(cell_t *cell, ad7280a_t *ad72) {
+
+  // Enable the cellbalance
   ad72->cellbalance |= (1<<(cell->cell_id+1));
   bus_write(ad72, AD7280A_CELL_BALANCE, ad72->cellbalance , WRITE_ALL_DISABLED);
-  cell->is_balancing = BATTERY_IS_BALANCING;
+
+  // Verify the cellbalance request is received by the AD7280a
+  if((ad7280a_read_register(AD7280A_CELL_BALANCE,ad72) >> (cell->cell_id+1)) & 1)
+  cell->is_balancing = CELL_IS_BALANCING;
 }
 
 /**
- * Deactivate cell balance
+ * Deactivate a single cell balance
  * @param cell The address of the cell to stop balancing
  * @param ad72 The address of the ad72 device
  */
-void ad7280a_balance_cell_off(battery_t *cell, ad7280a_t *ad72) {
+void ad7280a_balance_cell_off(cell_t *cell, ad7280a_t *ad72) {
+  // Disable the cellbalance
   ad72->cellbalance &= ~(1<<(cell->cell_id+1));
   bus_write(ad72, AD7280A_CELL_BALANCE, ad72->cellbalance, WRITE_ALL_DISABLED);
-  cell->is_balancing = BATTERY_IS_NOT_BALANCING;
+
+  // Verify the cellbalance request is received by the AD7280a
+  if(!((ad7280a_read_register(AD7280A_CELL_BALANCE,ad72) >> (cell->cell_id+1)) & 1))
+  cell->is_balancing = CELL_IS_NOT_BALANCING;
 }

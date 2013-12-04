@@ -7,19 +7,20 @@
 #include <ch.h>
 #include <hal.h>
 
-struct console {
+typedef struct console {
     SerialDriver *sd;
     SerialConfig *sc;
-};
+}console_t;
 
-void console_init(struct console *c);
+void console_init(console_t *c);
 
-int16_t console_readline(struct console *c, uint8_t *buffer, uint16_t count);
+int16_t console_readline(console_t *c, uint8_t *buffer, uint16_t count);
 
-int16_t console_read(struct console *c, uint8_t *buffer, uint16_t count);
+int16_t console_read(console_t *c, uint8_t *buffer, uint16_t count);
 
-int16_t console_writeline(struct console *c, const char *buffer);
+int16_t console_writeline(console_t *c, const char *buffer);
 
-int16_t console_write(struct console *c, const char *buffer);
+int16_t console_write(console_t *c, const char *buffer);
 
+char* itoa(int i, char b[]);
 #endif
