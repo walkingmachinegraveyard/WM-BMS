@@ -177,8 +177,7 @@ uint16_t acs_set_threshold(acs_t *acs, uint8_t amps) {
   if(amps>60) {
     amps = 60;
   }
-  // Set the value between 0 and 2^12
-  acs->threshold = (uint16_t)(amps * ACS_CURRENTSENS_RATIO * 3);
+  acs->threshold = (uint16_t)(amps * ACS_CURRENTSENS_RATIO);
   // Set the threshold
   dac_buffer = acs->threshold;
   // Start the dac driver

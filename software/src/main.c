@@ -117,12 +117,11 @@ int main(int argc, char *argv[]) {
 
 
 
-    ad7280a_read_cell(&cells[0],&ad72);
-    ad7280a_read_cell(&cells[1],&ad72);
-    ad7280a_read_cell(&cells[2],&ad72);
-    ad7280a_read_cell(&cells[3],&ad72);
-    ad7280a_read_cell(&cells[4],&ad72);
-    ad7280a_read_cell(&cells[5],&ad72);
+    monitor_voltage(cells, &ad72);
+    monitor_cellbalance(cells, &ad72);
+    monitor_UART_send_status(cells, &console, &acs);
+
+
     chThdSleepMilliseconds(133);
   }
     return 0;

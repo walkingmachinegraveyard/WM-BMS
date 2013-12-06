@@ -69,7 +69,7 @@
 #define GPIOD_OVER_CURRENT      5
 #define GPIOD_LED4              12      /* Green LED.   */
 #define GPIOD_LED3              13      /* Orange LED.  */
-#define GPIOD_LED5              14      /* Red LED.     */
+#define GPIOD_POWERMODULE       14
 #define GPIOD_LED6              15      /* Blue LED.    */
 
 #define GPIOE_INT1              0
@@ -279,7 +279,7 @@
                              PIN_MODE_INPUT(11) |                           \
                              PIN_MODE_OUTPUT(GPIOD_LED4) |                  \
                              PIN_MODE_OUTPUT(GPIOD_LED3) |                  \
-                             PIN_MODE_OUTPUT(GPIOD_LED5) |                  \
+                             PIN_MODE_OUTPUT(GPIOD_POWERMODULE) |                  \
                              PIN_MODE_OUTPUT(GPIOD_LED6))
 #define VAL_GPIOD_OTYPER    0x00000000
 #define VAL_GPIOD_OSPEEDR   0xFFFFFFFF
@@ -297,7 +297,7 @@
                              PIN_PUDR_PULLUP(11) |                          \
                              PIN_PUDR_FLOATING(GPIOD_LED4) |                \
                              PIN_PUDR_FLOATING(GPIOD_LED3) |                \
-                             PIN_PUDR_FLOATING(GPIOD_LED5) |                \
+                             PIN_PUDR_FLOATING(GPIOD_POWERMODULE) |                \
                              PIN_PUDR_FLOATING(GPIOD_LED6))
 #define VAL_GPIOD_ODR       0x00000FCF
 #define VAL_GPIOD_AFRL      0x00000000

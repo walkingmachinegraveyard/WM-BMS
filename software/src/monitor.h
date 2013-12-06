@@ -10,17 +10,21 @@
 
 #include "cell.h"
 #include "ad72.h"
+#include "acs.h"
+#include "therm.h"
 
 #define CHARGING_COMPLETE   4248  // 4.15V
 #define CHARGING_INCOMPLETE 4200
 #define MINIMAL_VOLTAGE     2886  // 2.8V
-#define MAXIMUM_DELTA       15    // 15 mV
+#define MAXIMUM_DELTA       50
 #define MAX_TEMP 55               // Celcius
 
 
-void cell_update(cell_t cell[], therm_t therm[], ad7280a_t *ad72);
+void monitor_UART_send_status(cell_t cells[], console_t *console, acs_t *acs);
+void monitor_cellbalance(cell_t cells[], ad7280a_t *ad7280a);
+void monitor_voltage(cell_t cells[], ad7280a_t *ad72);
+void monitor_current(acs_t *curr_sens);
 
-void cell_UART_send_status(cell_t cells[], console_t *console);
 
 
 #endif /* MONITOR_H_ */
