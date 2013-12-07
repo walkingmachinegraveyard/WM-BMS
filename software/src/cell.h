@@ -39,7 +39,7 @@ typedef struct {
 } cell_t;
 
 // Init cell
-void cell_init(cell_t cell[]);
+void cell_init(cell_t cell[], ad7280a_t *ad72);
 
 uint32_t cell_get_voltage(cell_t *cell);
 

@@ -120,6 +120,8 @@ int32_t acs_read_currsens(acs_t *acs) {
     acs->current_direction = CURRENT_IS_POSITIVE;
   }
 
+  acs->current = result;
+
   return result;
 }
 

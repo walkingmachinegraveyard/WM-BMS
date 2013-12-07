@@ -6,7 +6,6 @@
  */
 
 #include "therm.h"
-#include "ad72.h"
 
 void therm_init(therm_t therm[]) {
   uint8_t i = 0;

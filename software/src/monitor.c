@@ -11,20 +11,46 @@
  * Update the health status of the cell
  * @param cell The address of the cell
  */
-void monitor_health_check(cell_t *cell) {
-    cell->health = CELL_HEALTH_GOOD;
+void monitor_health_check(battery_t *battery, cell_t cells[], acs_t *acs) {
+
+  uint8_t i;
+  battery->health = BATTERY_HEALTH_GOOD;
+
+  for(i=0; i<6; ++i) {
+
+    cells[i].health = CELL_HEALTH_GOOD;
 
     // Overheat Check:
-    if(cell->temperature > MAX_TEMP)
-      cell->health = CELL_HEALTH_OVERHEAT;
+    if(cells[i].temperature > MAX_TEMP) {
+      cells[i].health = CELL_HEALTH_OVERHEAT;
+      battery->health = BATTERY_HEALTH_OVERHEAT;
+      palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
+      return;
+    }
 
     // OverVoltage Check:
-    if(cell->voltage > CHARGING_COMPLETE)
-      cell->health = CELL_HEALTH_OVER_VOLTAGE;
+    if(cells[i].voltage > MAX_VOLTAGE) {
+      cells[i].health = CELL_HEALTH_OVER_VOLTAGE;
+      battery->health = BATTERY_HEALTH_OVER_VOLTAGE;
+      palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
+      return;
+    }
 
     // UnderVoltage Check:
-    if(cell->voltage < MINIMAL_VOLTAGE)
-      cell->health = CELL_HEALTH_UNDER_VOLTAGE;
+    if(cells[i].voltage < MINIMAL_VOLTAGE) {
+      cells[i].health = CELL_HEALTH_UNDER_VOLTAGE;
+      battery->health = BATTERY_HEALTH_DEAD;
+      palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
+      return;
+    }
+  }
+
+  // Overcurrent Check:
+  if(acs->current > MAXIMUM_CURRENT) {
+    battery->health = BATTERY_HEALTH_OVER_CURRENT;
+    palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
+    return;
+  }
 }
 
 /**
@@ -41,8 +67,6 @@ void monitor_voltage(cell_t cells[], ad7280a_t *ad72) {
     // Check the cell voltage
     cells[i].voltage = ad7280a_read_cell(&cells[i],ad72);
   }
-  //TODO EMERGENCY
-
 }
 
 
@@ -61,29 +85,18 @@ void monitor_temperature(cell_t cells[], therm_t therm[], ad7280a_t *ad72) {
       cells[i].temperature = therm[1].temperature;
     }
   }
-
-  //TODO EMERGENCY
 }
 
-
-
-/*
- * 4.15 fully charged
-15mV delta max
-2.8 minimal cell voltage
-
-// 55 max temp
-//As soon as cell reaches minimum enable PowerModule_P
-
-cell <2.6 ChargerEn_P = 0
- current < 60
-
-As soon as cell reaches minimum enable PowerModule_P
+/**
+ * This function when called will make a decision as to which
+ * cell should be balanced or not depending on their voltage.
+ * @param cells     An array of cells
+ * @param ad7280a   The address of the ad7280a structure
  */
 void monitor_cellbalance(cell_t cells[], ad7280a_t *ad7280a) {
   uint8_t i;
   uint8_t lowest_cell;
-  uint32_t compare = 0xFFFFFFFF;
+  uint32_t compare = ~0;
 
   // Find the cell with the lowest voltage
   for(i=0; i<6; ++i) {
@@ -96,17 +109,18 @@ void monitor_cellbalance(cell_t cells[], ad7280a_t *ad7280a) {
   // Verify if it's delta to any cells is superior to the limit
   for(i=0; i<6; ++i) {
     if((cells[i].voltage - cells[lowest_cell-1].voltage) > MAXIMUM_DELTA) {
+      // Check if there is transition to prevent flooding of the SPI
+      if(cells[i].is_balancing == CELL_IS_NOT_BALANCING)
       ad7280a_balance_cell_on(&cells[i], ad7280a);
     } else
+      // Check if there is transition to prevent flooding of the SPI
+      if(cells[i].is_balancing == CELL_IS_BALANCING)
       ad7280a_balance_cell_off(&cells[i], ad7280a);
   }
 }
 
 void monitor_current(acs_t *acs) {
-
   acs_read_currsens(acs);
-  //TODO EMERGENCY
-
 }
 
 void monitor_UART_send_status(cell_t cells[], console_t *console, acs_t *acs) {

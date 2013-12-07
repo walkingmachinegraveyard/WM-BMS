@@ -49,6 +49,8 @@
 // SETTINGS
 //
 //==============================================================================
+#define WRITE_ALL_ENABLED  1
+#define WRITE_ALL_DISABLED 0
 // CONTROL HIGH BYTE
 // Conversion input cells / aux adc
 #define AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC           (0x00 << 6)
@@ -107,14 +109,6 @@
 //==============================================================================
 
 #define AD7280A_RETRANSMIT_SCLKS                        0xF800030A
-
-typedef struct ad7280a {
-    uint8_t delay_ms;
-    uint32_t rxbuf;
-    uint32_t txbuf;
-    uint32_t cellbalance;
-    uint32_t on_off;
-} ad7280a_t;
 
 typedef enum crc_type {
     WRITE_REGISTER,

@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
   init_bms(&bms);
   console_init(&console);
   init_ad7280a(&ad72);
-  cell_init(cells);
+  cell_init(cells, &ad72);
 
   // Test Variables
 //  ad7280a_packet_t PT;

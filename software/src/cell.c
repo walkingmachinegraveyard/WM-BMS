@@ -8,15 +8,15 @@
 #include "cell.h"
 #include "ad72.h"
 
-void cell_init(cell_t cell[]) {
-  uint8_t i = 0;
+void cell_init(cell_t cell[], ad7280a_t *ad72) {
+  uint8_t i;
   for(i=0; i<6; i++){
     cell[i].status = CELL_STATUS_UNKNOWN;
     cell[i].health = CELL_HEALTH_UNKNOWN;
     cell[i].temperature = 0;
     cell[i].voltage = 0;
     cell[i].cell_id= i + 1;
-    cell[i].is_balancing = CELL_IS_NOT_BALANCING;
+    ad7280a_balance_cell_off(&cell[i], ad72);
   }
 }
 

@@ -7,7 +7,7 @@ enum battery_status {
     BATTERY_STATUS_UNKNOWN,
     BATTERY_STATUS_CHARGING,
     BATTERY_STATUS_DISCHARGING,
-    BATTERY_STATUS_FULL,
+    BATTERY_STATUS_FULL
 };
 typedef enum battery_status battery_status_t;
 
@@ -17,14 +17,15 @@ enum battery_health {
     BATTERY_HEALTH_OVERHEAT,
     BATTERY_HEALTH_DEAD,
     BATTERY_HEALTH_OVER_VOLTAGE,
-    BATTERY_HEALTH_UNSPECIFIED_FAILURE,
+    BATTERY_HEALTH_OVER_CURRENT,
+    BATTERY_HEALTH_UNSPECIFIED_FAILURE
 };
 typedef enum battery_health battery_health_t;
 
 enum battery_power {
     BATTERY_POWER_UNKNOWN,
     BATTERY_POWER_NONE,
-    BATTERY_POWER_AC,
+    BATTERY_POWER_AC
 };
 typedef enum battery_power battery_power_t;
 

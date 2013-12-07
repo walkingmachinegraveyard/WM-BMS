@@ -20,6 +20,7 @@ struct acs {
     int32_t vzcr;        // Analog Zero Current Reference
     uint32_t fault;       // Fault State (Active LOW)
     uint8_t fault_en;     // Enables Overcurrent Faulting when High
+    uint32_t current;
     current_direction_t current_direction;
     DACDriver *dd;
     DACConfig *dc;
