@@ -9,7 +9,9 @@
 
 /**
  * Update the health status of the cell
- * @param cell The address of the cell
+ * @param battery The address of a battery type
+ * @param cells   An array of cell types
+ * @param acs     The address of the current sensor
  */
 void monitor_health_check(battery_t *battery, cell_t cells[], acs_t *acs) {
 
@@ -93,7 +95,7 @@ void monitor_temperature(cell_t cells[], therm_t therm[], ad7280a_t *ad72) {
  * @param cells     An array of cells
  * @param ad7280a   The address of the ad7280a structure
  */
-void monitor_cellbalance(cell_t cells[], ad7280a_t *ad7280a) {
+void monitor_cellbalance(cell_t cells[], ad7280a_t *ad72) {
   uint8_t i;
   uint8_t lowest_cell;
   uint32_t compare = ~0;
@@ -111,11 +113,11 @@ void monitor_cellbalance(cell_t cells[], ad7280a_t *ad7280a) {
     if((cells[i].voltage - cells[lowest_cell-1].voltage) > MAXIMUM_DELTA) {
       // Check if there is transition to prevent flooding of the SPI
       if(cells[i].is_balancing == CELL_IS_NOT_BALANCING)
-      ad7280a_balance_cell_on(&cells[i], ad7280a);
+      ad7280a_balance_cell_on(&cells[i], ad72);
     } else
       // Check if there is transition to prevent flooding of the SPI
       if(cells[i].is_balancing == CELL_IS_BALANCING)
-      ad7280a_balance_cell_off(&cells[i], ad7280a);
+      ad7280a_balance_cell_off(&cells[i], ad72);
   }
 }
 

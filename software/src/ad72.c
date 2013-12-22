@@ -135,9 +135,6 @@ uint32_t spi_exchange(ad7280a_t *ad72) {
   ad72->rxbuf = ad72->rxbuf << 16;
   ad72->rxbuf |= rx_split_buf[1];
 
-  // A simple delay to prevent the SPI from overflowing
-  //chThdSleepMilliseconds(ad72->delay_ms);
-
   return ad72->rxbuf;
 }
 
@@ -168,7 +165,6 @@ uint8_t init_ad7280a(ad7280a_t *ad72) {
   ad72->delay_ms = 10;
   ad72->txbuf = 0;
   ad72->rxbuf = 0;
-  ad72->cellbalance = 0;
   power_up_ad7280a(ad72);
 
   // Setup transfer parameters
@@ -216,24 +212,24 @@ uint32_t ad7280a_read_cell(cell_t *cell,ad7280a_t *ad72) {
   ad7280a_packet_t packet;
   packet.packed = 0;
 
-  // 1.On ecrit le numero de registre de la cellule
-  bus_write(ad72, AD7280A_READ, (cell->cell_id - 1) << 2, WRITE_ALL_DISABLED);
-
-  // 2. Turn off the read operation
+  // 1. Turn off the read operation
   bus_write(ad72, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
-            | AD7280A_CONTROL_CONV_INPUT_READ_DISABLE, WRITE_ALL_ENABLED);
+            | AD7280A_CONTROL_CONV_INPUT_READ_DISABLE
+            , WRITE_ALL_ENABLED);
 
-  // 3.Control Register Settings
+  // 2.Control Register Settings
   bus_write(ad72, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
-            | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_135ADC
+            | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_6ADC
             | AD7280A_CONTROL_CONV_START_FORMAT_CNVST
-            | AD7280A_CONTROL_CONV_AVG_BY_8, WRITE_ALL_DISABLED);
+            | AD7280A_CONTROL_CONV_AVG_BY_8
+            , WRITE_ALL_DISABLED);
 
-  // 4.Program the CNVST control register to 0x02 to allow ad72 single pulse
+
+  // 3.Program the CNVST control register to 0x02 to allow ad72 single pulse
   bus_write(ad72, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_SINGLE,
             WRITE_ALL_DISABLED);
 
-  // 5.Initiate conversions through the falling edge of CNVST.
+  // 4.Initiate conversions through the falling edge of CNVST.
   palClearPad(GPIOB,GPIOB_CNVST);
 
   // 5.1 Allow sufficient time for all conversions to be completed
@@ -246,14 +242,16 @@ uint32_t ad7280a_read_cell(cell_t *cell,ad7280a_t *ad72) {
   bus_write(ad72, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_GATED,
             WRITE_ALL_DISABLED);
 
-  //7. Apply 32 SCLKS to have the data in the receive buffer
+  // 7.On ecrit le numero de registre de la cellule
+  bus_write(ad72, AD7280A_READ, (cell->cell_id - 1) << 2, WRITE_ALL_DISABLED);
+
+  // 8. Apply 32 SCLKS to have the data in the receive buffer
   (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
   spi_exchange(ad72);
   packet.packed = (ad72->rxbuf);
 
-  //0.9765mV par LSB + 1000mV offset
+  // 0.9765mV par LSB + 1000mV offset
   cell->voltage = ((packet.r_conversion.conversion_data * 0.975) + 1000);
-
 
   return cell->voltage;
 }
@@ -328,7 +326,7 @@ uint32_t ad7280a_read_therm(therm_t *therm, ad7280a_t *ad72) {
 
     // 6 Gate the CNVST, this prevents unintentional conversions
     bus_write(ad72, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_GATED,
-              WRITE_ALL_DISABLED);
+              WRITE_ALL_ENABLED);
 
     //7. Apply 32 SCLKS to have the data in the receive buffer
     (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)

@@ -186,6 +186,8 @@ uint32_t ad7280a_read_therm(therm_t *therm, ad7280a_t *ad72);
 void ad7280a_balance_cell_on(cell_t *cell, ad7280a_t *ad72);
 // Deactivate cell balance (choose from 1 to 6)
 void ad7280a_balance_cell_off(cell_t *cell, ad7280a_t *ad72);
+uint32_t ad7280a_burst_read_cell(cell_t *cell,ad7280a_t *ad72);
+
 //==============================================================================
 
 //==============================================================================

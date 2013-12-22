@@ -12,58 +12,44 @@
 #include "monitor.h"
 #include "console.h"
 
+// Declarations des modules
+bms_t bms;
+cell_t cells[6];
+therm_t therms[2];
+ad7280a_t ad72;
+acs_t acs;
+console_t console;
 
-//Cell Monitoring Thread
-//static WORKING_AREA(cell_monitor_wa, 128);
-//static void cell_monitor(void *arg) {
-//  // Remove a warning...
-//  (void) arg;
-//
-//  // Thread loop
-//  while (true) {
-//  //  cell_check_voltage(&ad72,cells);
-//    chThdSleepMilliseconds(1337);
-//    chThdSleepMilliseconds(1337);
-//    chThdSleepMilliseconds(1337);
-//    chThdSleepMilliseconds(1337);
-//    chThdSleepMilliseconds(1337);
-// }
-
-//}
+static Mutex mtx; /* Mutex declaration */
 
 // Current Monitoring Thread
-//static WORKING_AREA(current_monitor_wa, 128);
-//static void current_monitor(void *arg) {
-  // Remove a warning...
-//  (void) arg;
-//  acs_set_threshold(&acs,25);
-//  acs_enable_fault(&acs);
+static WORKING_AREA(monitor_thread_wa, 128);
+static void monitor_thread(void *arg) {
 
-  // Thread loop
-//  while (true) {
-//    acs.vi_out = acs_read_currsens(&acs);
-//    acs.vzcr   = acs_read_vzcr(&acs);
-//    chThdSleepMilliseconds(133);
-//  }
-//}
+  (void) arg; // Remove a warning...
+  acs_set_threshold(&acs,25);
+  acs_enable_fault(&acs);
+
+  while (true) {
+    monitor_cellbalance(cells, &ad72);
+    monitor_voltage(cells, &ad72);
+    monitor_current(&acs);
+    monitor_UART_send_status(cells, &console, &acs);
+    chThdSleepMilliseconds(133);
+  }
+}
 
 // Main Thread
 int main(int argc, char *argv[]) {
 
-  // Declarations des modules
-  bms_t bms;
-  cell_t cells[6];
-  therm_t therms[2];
-  ad7280a_t ad72;
-  acs_t acs;
-  console_t console;
-
   // Remove warnings
   (void) argc;
   (void) argv;
+
   // Init OS
   halInit();
   chSysInit();
+  chMtxInit(&mtx); /* Mutex initialization */
 
   // Init BMS
   acs_init(&acs);
@@ -72,21 +58,17 @@ int main(int argc, char *argv[]) {
   init_ad7280a(&ad72);
   cell_init(cells, &ad72);
 
+//  chMtxLock(&mtx);
+//  /* Protected code */
+//  chMtxUnlock();
+
   // Test Variables
-//  ad7280a_packet_t PT;
-  uint32_t t1;
-    char buffer[20];
-//  uint32_t t6;
-//  uint8_t  crc;
+//  uint32_t t1;
+//  char buffer[20];
 
-//
-//  // CellMonitor Thread
-//  chThdCreateStatic(cell_monitor_wa, sizeof(cell_monitor_wa),
-//                    NORMALPRIO, cell_monitor, NULL);
-
-  // CurrentMonitor Thread
-//  chThdCreateStatic(current_monitor_wa, sizeof(current_monitor_wa),
-//                    NORMALPRIO, (tfunc_t)current_monitor, NULL);
+//   Monitor Thread
+  chThdCreateStatic(monitor_thread_wa, sizeof(monitor_thread_wa),
+                    NORMALPRIO, (tfunc_t)monitor_thread, NULL);
 
   // Infinite loop
   while (true) {
@@ -111,19 +93,18 @@ int main(int argc, char *argv[]) {
 //    cell_update(cells,therms,&ad72);
 //    cell_UART_send_status(cells, &console);
 //    cells[0].cell_id = 0x3;
-//    ad7280a_read_cell(&cells[0],&ad72);
-//    chThdSleepMilliseconds(133);
-//
+//    t1 =    ad7280a_read_cell(&cells[0],&ad72);
+//    t1 =    ad7280a_read_cell(&cells[1],&ad72);
+//    t1 =    ad7280a_read_cell(&cells[0],&ad72);
+//    t1 =    ad7280a_read_cell(&cells[1],&ad72);
 
 
 
-    monitor_voltage(cells, &ad72);
-    monitor_cellbalance(cells, &ad72);
-    monitor_UART_send_status(cells, &console, &acs);
+    //    chThdSleepMilliseconds(133);
+
 
 
     chThdSleepMilliseconds(133);
   }
     return 0;
 }
-

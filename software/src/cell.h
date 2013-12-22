@@ -30,7 +30,7 @@ enum cell_balancing {
 typedef enum cell_balancing cell_balancing_t;
 
 typedef struct {
-    uint8_t cell_id;
+    uint32_t cell_id;
     cell_status_t status;
     cell_health_t health;
     cell_balancing_t is_balancing;

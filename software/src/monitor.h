@@ -24,7 +24,7 @@
 void monitor_UART_send_status(cell_t cells[], console_t *console, acs_t *acs);
 void monitor_cellbalance(cell_t cells[], ad7280a_t *ad7280a);
 void monitor_voltage(cell_t cells[], ad7280a_t *ad72);
-void monitor_current(acs_t *curr_sens);
+void monitor_current(acs_t *acs);
 
 
 
