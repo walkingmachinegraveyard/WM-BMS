@@ -4,7 +4,6 @@
 // Local
 #include <stdint.h>
 #include "bms.h"
-#include "console.h"
 
 typedef enum cell_status {
     CELL_STATUS_UNKNOWN = 0x00,

@@ -22,17 +22,9 @@ enum battery_health {
 };
 typedef enum battery_health battery_health_t;
 
-enum battery_power {
-    BATTERY_POWER_UNKNOWN,
-    BATTERY_POWER_NONE,
-    BATTERY_POWER_AC
-};
-typedef enum battery_power battery_power_t;
-
 struct battery {
     battery_status_t status;
     battery_health_t health;
-    battery_power_t power;
     uint32_t temperature;
     uint32_t voltage;
 };

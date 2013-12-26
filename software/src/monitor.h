@@ -20,12 +20,8 @@
 #define MAXIMUM_CURRENT     5000  // 50 amps
 #define MAX_TEMP            55    // Celcius
 
-
-void monitor_UART_send_status(cell_t cells[], console_t *console, acs_t *acs);
 void monitor_cellbalance(cell_t cells[], ad7280a_t *ad7280a);
-void monitor_voltage(cell_t cells[], ad7280a_t *ad72);
+void monitor_voltage(cell_t cells[], ad7280a_t *ad72, battery_t *batt);
 void monitor_current(acs_t *acs);
-
-
 
 #endif /* MONITOR_H_ */

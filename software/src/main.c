@@ -1,8 +1,16 @@
+/*
+ * Cell management system, Walking Machine, Ecole de Technologie Superieure
+ * Copyright (C) 2013 Francois Killeen
+ *
+ */
+
 // C Headers
 #include <stdint.h>
+
 // ChibiOS
 #include "ch.h"
 #include "hal.h"
+
 // Local Headers
 #include "bms.h"
 #include "cell.h"
@@ -14,6 +22,7 @@
 
 // Declarations des modules
 bms_t bms;
+battery_t batt;
 cell_t cells[6];
 therm_t therms[2];
 ad7280a_t ad72;
@@ -22,19 +31,34 @@ console_t console;
 
 static Mutex mtx; /* Mutex declaration */
 
-// Current Monitoring Thread
+//  chMtxLock(&mtx);
+//  /* Protected code */
+//  chMtxUnlock();
+
+// CanBus  Thread
+static WORKING_AREA(canbus_thread_wa, 128);
+static void canbus_thread(void *arg) {
+
+  (void) arg;  // Remove a warning...
+
+  while (true) {
+    chThdSleepMilliseconds(133);
+  }
+}
+
+// Monitoring Thread
 static WORKING_AREA(monitor_thread_wa, 128);
 static void monitor_thread(void *arg) {
 
-  (void) arg; // Remove a warning...
-  acs_set_threshold(&acs,25);
+  (void) arg;  // Remove a warning...
+  acs_set_threshold(&acs, 25);
   acs_enable_fault(&acs);
 
   while (true) {
     monitor_cellbalance(cells, &ad72);
-    monitor_voltage(cells, &ad72);
+    monitor_voltage(cells, &ad72, &batt);
     monitor_current(&acs);
-    monitor_UART_send_status(cells, &console, &acs);
+    consolePrintStatus(cells, &console, &acs, &batt);
     chThdSleepMilliseconds(133);
   }
 }
@@ -58,53 +82,17 @@ int main(int argc, char *argv[]) {
   init_ad7280a(&ad72);
   cell_init(cells, &ad72);
 
-//  chMtxLock(&mtx);
-//  /* Protected code */
-//  chMtxUnlock();
+  // Monitor Thread Initialization
+  chThdCreateStatic(monitor_thread_wa, sizeof(monitor_thread_wa), NORMALPRIO,
+                    (tfunc_t) monitor_thread, NULL);
 
-  // Test Variables
-//  uint32_t t1;
-//  char buffer[20];
-
-//   Monitor Thread
-  chThdCreateStatic(monitor_thread_wa, sizeof(monitor_thread_wa),
-                    NORMALPRIO, (tfunc_t)monitor_thread, NULL);
+  // CanBus Thread Initialization
+  chThdCreateStatic(canbus_thread_wa, sizeof(canbus_thread_wa), NORMALPRIO,
+                    (tfunc_t) canbus_thread, NULL);
 
   // Infinite loop
   while (true) {
-
-//    console_write(&console, "Current Sens: ");
-//    acs_read_currsens(&acs);
-//    itoa(acs.vi_out, buffer);
-//    console_write(&console, buffer);
-//
-//    console_write(&console, "  VZCR: ");
-//    acs_read_currsens(&acs);
-//    itoa(acs.vzcr, buffer);
-//    console_write(&console, buffer);
-//
-//    console_write(&console, "   Output Current: ");
-//
-//    if (acs.current_direction == CURRENT_IS_NEGATIVE)
-//      console_write(&console, "-");
-//
-//    itoa(acs_read_currsens(&acs), buffer);
-//    console_writeline(&console, buffer);
-//    cell_update(cells,therms,&ad72);
-//    cell_UART_send_status(cells, &console);
-//    cells[0].cell_id = 0x3;
-//    t1 =    ad7280a_read_cell(&cells[0],&ad72);
-//    t1 =    ad7280a_read_cell(&cells[1],&ad72);
-//    t1 =    ad7280a_read_cell(&cells[0],&ad72);
-//    t1 =    ad7280a_read_cell(&cells[1],&ad72);
-
-
-
-    //    chThdSleepMilliseconds(133);
-
-
-
     chThdSleepMilliseconds(133);
   }
-    return 0;
+  return 0;
 }

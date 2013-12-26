@@ -76,16 +76,15 @@ uint8_t do_crc8(ad7280a_packet_t *packet, crc_type_t crc) {
  * @return 1 if CRC is good 0 if not
  */
 uint8_t crc_conv_check(ad7280a_t *ad72) {
-  crc_type_t crc_type = CRC_DATA_READ;
+  crc_type_t crc_type = READ_CONVERSION;
   ad7280a_packet_t packet;
   packet.packed = ad72->rxbuf;
   uint8_t received_crc = packet.r_conversion.crc;
 
-  if(received_crc != do_crc8(&packet,crc_type)) {
+  if(received_crc != do_crc8(&packet,crc_type))
     return 0;
-  }
-
-  return 1;
+  else
+    return 1;
 }
 
 /**
@@ -224,7 +223,6 @@ uint32_t ad7280a_read_cell(cell_t *cell,ad7280a_t *ad72) {
             | AD7280A_CONTROL_CONV_AVG_BY_8
             , WRITE_ALL_DISABLED);
 
-
   // 3.Program the CNVST control register to 0x02 to allow ad72 single pulse
   bus_write(ad72, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_SINGLE,
             WRITE_ALL_DISABLED);
@@ -288,51 +286,54 @@ uint32_t ad7280a_read_register(uint8_t address,ad7280a_t *ad72) {
 
 /**
  * Read thermistor
- * @param therm (choose therm from 1 to 2)
+ * @param therm the address of the therm to read
  * @param ad72 The address of the ad72 device
  * @return Return the therm read value
  */
 uint32_t ad7280a_read_therm(therm_t *therm, ad7280a_t *ad72) {
-
   ad7280a_packet_t packet;
-    packet.packed = 0;
+  packet.packed = 0;
 
-    // 1.On ecrit le numero de registre de la cellule
-    bus_write(ad72, AD7280A_READ, ((therm->therm_id+6)-1) << 2,
-             WRITE_ALL_DISABLED);
+  // 1. Turn off the read operation
+  bus_write(ad72, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_135ADC
+            | AD7280A_CONTROL_CONV_INPUT_READ_DISABLE
+            , WRITE_ALL_ENABLED);
 
-    // 2. Turn off the read operation
-    bus_write(ad72, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
-              | AD7280A_CONTROL_CONV_INPUT_READ_DISABLE, WRITE_ALL_ENABLED);
+  // 2.Control Register Settings
+  bus_write(ad72, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_135ADC
+            | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_135ADC
+            | AD7280A_CONTROL_CONV_START_FORMAT_CNVST
+            | AD7280A_CONTROL_CONV_AVG_BY_8
+            , WRITE_ALL_DISABLED);
 
-    // 3.Control Register Settings
-    bus_write(ad72, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
-              | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_6ADC
-              | AD7280A_CONTROL_CONV_START_FORMAT_CNVST
-              | AD7280A_CONTROL_CONV_AVG_BY_8, WRITE_ALL_DISABLED);
 
-    // 4.Program the CNVST control register to 0x02 to allow ad72 single pulse
-    bus_write(ad72, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_SINGLE,
-              WRITE_ALL_DISABLED);
+  // 3.Program the CNVST control register to 0x02 to allow ad72 single pulse
+  bus_write(ad72, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_SINGLE,
+            WRITE_ALL_DISABLED);
 
-    // 5.Initiate conversions through the falling edge of CNVST.
-    palClearPad(GPIOB,GPIOB_CNVST);
+  // 4.Initiate conversions through the falling edge of CNVST.
+  palClearPad(GPIOB,GPIOB_CNVST);
 
-    // 5.1 Allow sufficient time for all conversions to be completed
-    chThdSleepMilliseconds(ad72->delay_ms);
+  // 5.1 Allow sufficient time for all conversions to be completed
+  chThdSleepMilliseconds(ad72->delay_ms);
 
-    // 5.2 Latch the CNVST back to one
-    palSetPad(GPIOB,GPIOB_CNVST);
+  // 5.2 Latch the CNVST back to one
+  palSetPad(GPIOB,GPIOB_CNVST);
 
-    // 6 Gate the CNVST, this prevents unintentional conversions
-    bus_write(ad72, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_GATED,
-              WRITE_ALL_ENABLED);
+  // 6 Gate the CNVST, this prevents unintentional conversions
+  bus_write(ad72, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_GATED,
+            WRITE_ALL_DISABLED);
 
-    //7. Apply 32 SCLKS to have the data in the receive buffer
-    (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
-    spi_exchange(ad72);
-    packet.packed = (ad72->rxbuf);
-    return packet.r_conversion.conversion_data;
+  // 7.On ecrit le numero de registre de la cellule
+  bus_write(ad72, AD7280A_READ, ((therm->therm_id+6)-1) << 2,
+           WRITE_ALL_DISABLED);
+
+  // 8. Apply 32 SCLKS to have the data in the receive buffer
+  (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
+  spi_exchange(ad72);
+  packet.packed = (ad72->rxbuf);
+
+  return packet.r_conversion.conversion_data;
 }
 
 /**

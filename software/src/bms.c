@@ -25,6 +25,8 @@ void init_bms(bms_t *bms) {
 
   palSetGroupMode(GPIOC, PAL_PORT_BIT(4), 0, PAL_MODE_OUTPUT_PUSHPULL);
   palClearPad(GPIOC, 4);           // Set du ChipSelect a zero (active low)
+
+  // SPI specific pinout
   palSetPadMode(GPIOA, 5 , PAL_MODE_ALTERNATE(5) |
   PAL_STM32_OSPEED_HIGHEST);       // SCLK
   palSetPadMode(GPIOA, 6 , PAL_MODE_ALTERNATE(5) |
