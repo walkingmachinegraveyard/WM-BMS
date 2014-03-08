@@ -106,6 +106,14 @@ void monitor_cellbalance(cell_t cells[], ad7280a_t *ad72) {
   uint8_t lowest_cell;
   uint32_t compare = ~0;
 
+  // Verify the CellBalance status of each cells
+  for(i = 0; i<=5; ++i){
+    if((ad7280a_read_register(AD7280A_CELL_BALANCE,ad72) >> (cells[i].cell_id+1))   & 1)
+      cells[i].is_balancing = CELL_IS_BALANCING;
+    if(!((ad7280a_read_register(AD7280A_CELL_BALANCE,ad72) >> (cells[i].cell_id+1    )) & 1))
+      cells[i].is_balancing = CELL_IS_NOT_BALANCING;
+  }
+
   // Find the cell with the lowest voltage
   for (i = 0; i < 6; ++i) {
     if (cells[i].voltage < compare) {

@@ -29,6 +29,10 @@ ad7280a_t ad72;
 acs_t acs;
 console_t console;
 
+int cb_on = 0;
+int cb_num = 0;
+int i = 0;
+
 static Mutex mtx; /* Mutex declaration */
 
 //  chMtxLock(&mtx);
@@ -39,7 +43,7 @@ static Mutex mtx; /* Mutex declaration */
 static WORKING_AREA(canbus_thread_wa, 128);
 static void canbus_thread(void *arg) {
 
-  (void) arg;  // Remove a warning...
+  (void) arg;  // remove a warning...
 
   while (true) {
     chThdSleepMilliseconds(133);
@@ -50,12 +54,12 @@ static void canbus_thread(void *arg) {
 static WORKING_AREA(monitor_thread_wa, 128);
 static void monitor_thread(void *arg) {
 
-  (void) arg;  // Remove a warning...
+  (void) arg;  // remove a warning...
   acs_set_threshold(&acs, 25);
   acs_enable_fault(&acs);
 
   while (true) {
-//    monitor_cellbalance(cells, &ad72);
+//  monitor_cellbalance(cells, &ad72);
     monitor_voltage(cells, &ad72, &batt);
     monitor_current(&acs);
     consolePrintStatus(cells, &console, &acs, &batt);
@@ -83,19 +87,21 @@ int main(int argc, char *argv[]) {
 
   // Monitor Thread Initialization
   chThdCreateStatic(monitor_thread_wa, sizeof(monitor_thread_wa), NORMALPRIO,
-                    (tfunc_t) monitor_thread, NULL);
+      (tfunc_t) monitor_thread, NULL);
 
   // CanBus Thread Initialization
   chThdCreateStatic(canbus_thread_wa, sizeof(canbus_thread_wa), NORMALPRIO,
-                    (tfunc_t) canbus_thread, NULL);
+      (tfunc_t) canbus_thread, NULL);
 
   // Infinite loop
   while (true) {
 
     // Check if emergency Dipswitch is activated (TESTING PURPOSES)!!!
-    if(!palReadPad(GPIOE, 0) || !palReadPad(GPIOE, 1) || !palReadPad(GPIOE, 2) || !palReadPad(GPIOE, 3))
-      palClearPad(GPIOD,6);
-
+    if (!palReadPad(GPIOE, 0) || !palReadPad(GPIOE, 1) || !palReadPad(GPIOE, 2)
+        || !palReadPad(GPIOE, 3))
+    {
+      palClearPad(GPIOD, 6);
+    }
 
     chThdSleepMilliseconds(133);
   }

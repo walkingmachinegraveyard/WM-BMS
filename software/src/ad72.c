@@ -350,6 +350,12 @@ void ad7280a_balance_cell_on(cell_t *cell, ad7280a_t *ad72) {
   // Verify the cellbalance request is received by the AD7280a
   if((ad7280a_read_register(AD7280A_CELL_BALANCE,ad72) >> (cell->cell_id+1)) & 1)
   cell->is_balancing = CELL_IS_BALANCING;
+
+  // Activate the CellBalance Timer (Watchdog) for 72 seconds
+  ad72->cellbalance |= (1<<(cell->cell_id+1));
+  bus_write(ad72, AD7280A_CELL_BALANCE + cell->cell_id, 0x8 , WRITE_ALL_DISABLED);
+
+
 }
 
 /**
