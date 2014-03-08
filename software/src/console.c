@@ -6,7 +6,7 @@
 #include "console.h"
 
 static SerialConfig serial1_config = {
-    9600,
+    115200,
     0,
     0,
     0,
@@ -78,41 +78,34 @@ void consolePrintStatus(cell_t cells[], console_t *console, acs_t *acs,
                            battery_t *batt) {
 
   char buffer[20];
-  console_write(console, "  cell1: ");
+  console_write(console, "\033[2J\033[1;1H");
+  console_write(console, "cell1: ");
   console_write(console, itoa(cells[0].voltage, buffer));
-  console_write(console, " balancing: ");
-  console_write(console, itoa(cells[0].is_balancing, buffer));
-  console_write(console, " | cell2: ");
+  console_write(console, " bal: ");
+  console_writeline(console, itoa(cells[0].is_balancing, buffer));
+  console_write(console, "cell2: ");
   console_write(console, itoa(cells[1].voltage, buffer));
-  console_write(console, " balancing: ");
-  console_write(console, itoa(cells[1].is_balancing, buffer));
-  console_write(console, " | cell3: ");
+  console_write(console, " bal: ");
+  console_writeline(console, itoa(cells[1].is_balancing, buffer));
+  console_write(console, "cell3: ");
   console_write(console, itoa(cells[2].voltage, buffer));
-  console_write(console, " balancing: ");
-  console_write(console, itoa(cells[2].is_balancing, buffer));
-  console_write(console, " | cell4: ");
+  console_write(console, " bal: ");
+  console_writeline(console, itoa(cells[2].is_balancing, buffer));
+  console_write(console, "cell4: ");
   console_write(console, itoa(cells[3].voltage, buffer));
-  console_write(console, " balancing: ");
-  console_write(console, itoa(cells[3].is_balancing, buffer));
-  console_write(console, " | cell5: ");
+  console_write(console, " bal: ");
+  console_writeline(console, itoa(cells[3].is_balancing, buffer));
+  console_write(console, "cell5: ");
   console_write(console, itoa(cells[4].voltage, buffer));
-  console_write(console, " balancing: ");
-  console_write(console, itoa(cells[4].is_balancing, buffer));
-  console_write(console, " | cell6: ");
+  console_write(console, " bal: ");
+  console_writeline(console, itoa(cells[4].is_balancing, buffer));
+  console_write(console, "cell6: ");
   console_write(console, itoa(cells[5].voltage, buffer));
-  console_write(console, " balancing: ");
-  console_write(console, itoa(cells[5].is_balancing, buffer));
-  console_write(console, " TotalVoltage: ");
-  console_write(console, itoa(batt->voltage, buffer));
-  console_write(console, " Current Sens: ");
-  monitor_current(acs);
-  itoa(acs->vi_out, buffer);
-  console_write(console, buffer);
-  console_write(console, "  VZCR: ");
-  monitor_current(acs);
-  itoa(acs->vzcr, buffer);
-  console_write(console, buffer);
-  console_write(console, "   Output Current: ");
+  console_write(console, " bal: ");
+  console_writeline(console, itoa(cells[5].is_balancing, buffer));
+  console_write(console, "Total: ");
+  console_writeline(console, itoa(batt->voltage, buffer));
+  console_write(console, "OutCur: ");
   if (acs->current_direction == CURRENT_IS_NEGATIVE)
     console_write(console, "-");
   itoa(acs_read_currsens(acs), buffer);

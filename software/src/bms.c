@@ -20,8 +20,15 @@ void init_bms(bms_t *bms) {
   // Set the CNVST Pin for AD7280a
   palSetGroupMode(GPIOB, PAL_PORT_BIT(0), 0, PAL_MODE_OUTPUT_PUSHPULL);
 
+  // SelfPower Pin
   palSetGroupMode(GPIOD, PAL_PORT_BIT(6), 0, PAL_MODE_OUTPUT_PUSHPULL);
-  palSetPad(GPIOD,6);              // SelfPower
+  palSetPad(GPIOD,6);              // Activate SelfPower
+
+  // ID Pins
+  palSetGroupMode(GPIOE, PAL_PORT_BIT(0), 0, PAL_MODE_INPUT);
+  palSetGroupMode(GPIOE, PAL_PORT_BIT(1), 0, PAL_MODE_INPUT);
+  palSetGroupMode(GPIOE, PAL_PORT_BIT(2), 0, PAL_MODE_INPUT);
+  palSetGroupMode(GPIOE, PAL_PORT_BIT(3), 0, PAL_MODE_INPUT);
 
   palSetGroupMode(GPIOC, PAL_PORT_BIT(4), 0, PAL_MODE_OUTPUT_PUSHPULL);
   palClearPad(GPIOC, 4);           // Set du ChipSelect a zero (active low)

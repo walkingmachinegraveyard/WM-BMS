@@ -55,11 +55,10 @@ static void monitor_thread(void *arg) {
   acs_enable_fault(&acs);
 
   while (true) {
-    monitor_cellbalance(cells, &ad72);
+//    monitor_cellbalance(cells, &ad72);
     monitor_voltage(cells, &ad72, &batt);
     monitor_current(&acs);
     consolePrintStatus(cells, &console, &acs, &batt);
-    chThdSleepMilliseconds(133);
   }
 }
 
@@ -92,6 +91,12 @@ int main(int argc, char *argv[]) {
 
   // Infinite loop
   while (true) {
+
+    // Check if emergency Dipswitch is activated (TESTING PURPOSES)!!!
+    if(!palReadPad(GPIOE, 0) || !palReadPad(GPIOE, 1) || !palReadPad(GPIOE, 2) || !palReadPad(GPIOE, 3))
+      palClearPad(GPIOD,6);
+
+
     chThdSleepMilliseconds(133);
   }
   return 0;
