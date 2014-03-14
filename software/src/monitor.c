@@ -15,44 +15,52 @@
  */
 void monitor_health_check(battery_t *battery, cell_t cells[], acs_t *acs) {
 
-  uint8_t i;
-  battery->health = BATTERY_HEALTH_GOOD;
+	uint8_t i;
+	battery->health = BATTERY_HEALTH_GOOD;
 
-  for (i = 0; i < 6; ++i) {
+	for (i = 0; i < 6; ++i) {
 
-    cells[i].health = CELL_HEALTH_GOOD;
+		cells[i].health = CELL_HEALTH_GOOD;
 
-    // Overheat Check:
-    if (cells[i].temperature > MAX_TEMP) {
-      cells[i].health = CELL_HEALTH_OVERHEAT;
-      battery->health = BATTERY_HEALTH_OVERHEAT;
+		// Overheat Check:
+		if (cells[i].temperature > MAX_TEMP) {
+			cells[i].health = CELL_HEALTH_OVERHEAT;
+			battery->health = BATTERY_HEALTH_OVERHEAT;
+			palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
+			return;
+		}
+
+    // Max Delta Check:
+    if (cells[i].delta == CELL_IS_SUPERIOR_TO_MAX_DELTA) {
+      battery->health = BATTERY_IS_SUPERIOR_TO_MAX_DELTA;
       palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
-      return;
+    } else {
+      battery->health = BATTERY_IS_INFERIOR_TO_MAX_DELTA;
     }
 
-    // OverVoltage Check:
-    if (cells[i].voltage > MAX_VOLTAGE) {
-      cells[i].health = CELL_HEALTH_OVER_VOLTAGE;
-      battery->health = BATTERY_HEALTH_OVER_VOLTAGE;
-      palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
-      return;
-    }
+		// OverVoltage Check:
+		if (cells[i].voltage > MAX_VOLTAGE) {
+			cells[i].health = CELL_HEALTH_OVER_VOLTAGE;
+			battery->health = BATTERY_HEALTH_OVER_VOLTAGE;
+			palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
+			return;
+		}
 
-    // UnderVoltage Check:
-    if (cells[i].voltage < MINIMAL_VOLTAGE) {
-      cells[i].health = CELL_HEALTH_UNDER_VOLTAGE;
-      battery->health = BATTERY_HEALTH_DEAD;
-      palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
-      return;
-    }
-  }
+		// UnderVoltage Check:
+		if (cells[i].voltage < MINIMAL_VOLTAGE) {
+			cells[i].health = CELL_HEALTH_UNDER_VOLTAGE;
+			battery->health = BATTERY_HEALTH_DEAD;
+			palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
+			return;
+		}
+	}
 
-  // Overcurrent Check:
-  if (acs->current > MAXIMUM_CURRENT) {
-    battery->health = BATTERY_HEALTH_OVER_CURRENT;
-    palSetPad(GPIOD, GPIOD_POWERMODULE);        // Emergency shutdown
-    return;
-  }
+	// Overcurrent Check:
+	if (acs->current > MAXIMUM_CURRENT) {
+		battery->health = BATTERY_HEALTH_OVER_CURRENT;
+		palSetPad(GPIOD, GPIOD_POWERMODULE);        // Emergency shutdown
+		return;
+	}
 }
 
 /**
@@ -63,36 +71,36 @@ void monitor_health_check(battery_t *battery, cell_t cells[], acs_t *acs) {
  */
 void monitor_voltage(cell_t cells[], ad7280a_t *ad72, battery_t *batt) {
 
-  uint8_t i;
-  uint32_t batt_volt = 0;
+	uint8_t i;
+	uint32_t batt_volt = 0;
 
-  for (i = 0; i < 6; ++i) {
-    // Check the cell voltage
-    cells[i].voltage = ad7280a_read_cell(&cells[i], ad72);
-    batt_volt += cells[i].voltage;
-  }
+	for (i = 0; i < 6; ++i) {
+		// Check the cell voltage
+		cells[i].voltage = ad7280a_read_cell(&cells[i], ad72);
+		batt_volt += cells[i].voltage;
+	}
 
-  batt->voltage = batt_volt;
+	batt->voltage = batt_volt;
 }
 
 void monitor_temperature(cell_t cells[], therm_t therm[], ad7280a_t *ad72,
-                            battery_t *batt) {
+		battery_t *batt) {
 
-  uint8_t i;
+	uint8_t i;
 
-  // Check the temperature of the cells
-  for (i = 0; i < 6; ++i) {
-    therm_read_temp(therm, ad72);
+	// Check the temperature of the cells
+	for (i = 0; i < 6; ++i) {
+		therm_read_temp(therm, ad72);
 
-    // Take the highest temperature from the two therms
-    if (therm[0].temperature > therm[1].temperature) {
-      cells[i].temperature = therm[0].temperature;
-      batt->temperature = therm[0].temperature;
-    } else {
-      cells[i].temperature = therm[1].temperature;
-      batt->temperature = therm[1].temperature;
-    }
-  }
+		// Take the highest temperature from the two therms
+		if (therm[0].temperature > therm[1].temperature) {
+			cells[i].temperature = therm[0].temperature;
+			batt->temperature = therm[0].temperature;
+		} else {
+			cells[i].temperature = therm[1].temperature;
+			batt->temperature = therm[1].temperature;
+		}
+	}
 }
 
 /**
@@ -102,37 +110,47 @@ void monitor_temperature(cell_t cells[], therm_t therm[], ad7280a_t *ad72,
  * @param ad7280a   The address of the ad7280a structure
  */
 void monitor_cellbalance(cell_t cells[], ad7280a_t *ad72) {
-  uint8_t i;
-  uint8_t lowest_cell;
-  uint32_t compare = ~0;
+	uint8_t i;
+	uint8_t lowest_cell;
+	uint32_t compare = ~0;
 
-  // Verify the CellBalance status of each cells
-  for(i = 0; i<=5; ++i){
-    if((ad7280a_read_register(AD7280A_CELL_BALANCE,ad72) >> (cells[i].cell_id+1))   & 1)
-      cells[i].is_balancing = CELL_IS_BALANCING;
-    if(!((ad7280a_read_register(AD7280A_CELL_BALANCE,ad72) >> (cells[i].cell_id+1    )) & 1))
-      cells[i].is_balancing = CELL_IS_NOT_BALANCING;
-  }
+	// Verify the CellBalance status of each cells
+	for (i = 0; i <= 5; ++i) {
+		if ((ad7280a_read_register(AD7280A_CELL_BALANCE, ad72)
+				>> (cells[i].cell_id + 1)) & 1)
+			cells[i].is_balancing = CELL_IS_BALANCING;
+		if (!((ad7280a_read_register(AD7280A_CELL_BALANCE, ad72)
+				>> (cells[i].cell_id + 1)) & 1))
+			cells[i].is_balancing = CELL_IS_NOT_BALANCING;
+	}
 
-  // Find the cell with the lowest voltage
-  for (i = 0; i < 6; ++i) {
-    if (cells[i].voltage < compare) {
-      compare = cells[i].voltage;
-      lowest_cell = cells[i].cell_id;
-    }
-  }
+	// Find the cell with the lowest voltage
+	for (i = 0; i < 6; ++i) {
+		if (cells[i].voltage < compare) {
+			compare = cells[i].voltage;
+			lowest_cell = cells[i].cell_id;
+		}
+	}
 
-  // Verify if it's delta to any cells is superior to the limit
-  for (i = 0; i < 6; ++i) {
-    if ((cells[i].voltage - cells[lowest_cell - 1].voltage) > MAXIMUM_DELTA) {
-      // Check if there is transition to prevent flooding of the SPI
-      if (cells[i].is_balancing == CELL_IS_NOT_BALANCING)
-        ad7280a_balance_cell_on(&cells[i], ad72);
-    } else if (cells[i].is_balancing == CELL_IS_BALANCING)
-      ad7280a_balance_cell_off(&cells[i], ad72);
-  }
+	for (i = 0; i < 6; ++i) {
+		// Declare an emergency if the delta between cells voltage is superior to the accepted limit
+		if ((cells[i].voltage - cells[lowest_cell - 1].voltage) > MAX_DELTA)
+			cells[i].delta = CELL_IS_SUPERIOR_TO_MAX_DELTA;
+		else
+			cells[i].delta = CELL_IS_INFERIOR_TO_MAX_DELTA;
+
+		// Verify if the delta OR the voltage to any cells is superior to the limit
+		if (((cells[i].voltage - cells[lowest_cell - 1].voltage) > DELTA)
+				|| cells[i].voltage > MAX_VOLTAGE) {
+
+			if (cells[i].is_balancing == CELL_IS_NOT_BALANCING) // Check if there is transition
+				ad7280a_balance_cell_on(&cells[i], ad72);
+
+		} else if (cells[i].is_balancing == CELL_IS_BALANCING) // Check if there is transition
+			ad7280a_balance_cell_off(&cells[i], ad72);
+	}
 }
 
 void monitor_current(acs_t *acs) {
-  acs_read_currsens(acs);
+	acs_read_currsens(acs);
 }

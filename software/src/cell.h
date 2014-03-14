@@ -23,16 +23,24 @@ typedef enum cell_health {
 } cell_health_t;
 
 enum cell_balancing {
-    CELL_IS_BALANCING = 0x01,
-    CELL_IS_NOT_BALANCING = 0x00
+    CELL_IS_NOT_BALANCING = 0x00,
+    CELL_IS_BALANCING = 0x01
 };
 typedef enum cell_balancing cell_balancing_t;
+
+enum cell_delta {
+    CELL_DELTA_UNKNOWN = 0x00,
+    CELL_IS_INFERIOR_TO_MAX_DELTA = 0x01,
+    CELL_IS_SUPERIOR_TO_MAX_DELTA = 0x02
+};
+typedef enum cell_delta cell_delta_t;
 
 typedef struct {
     uint32_t cell_id;
     cell_status_t status;
     cell_health_t health;
     cell_balancing_t is_balancing;
+    cell_delta_t delta;
     uint32_t temperature;
     uint32_t voltage;
 } cell_t;

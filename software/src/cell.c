@@ -13,6 +13,7 @@ void cell_init(cell_t cell[], ad7280a_t *ad72) {
   for(i=0; i<6; i++){
     cell[i].status = CELL_STATUS_UNKNOWN;
     cell[i].health = CELL_HEALTH_UNKNOWN;
+    cell[i].delta = CELL_DELTA_UNKNOWN;
     cell[i].temperature = 0;
     cell[i].voltage = 0;
     cell[i].cell_id= i + 1;
@@ -22,6 +23,10 @@ void cell_init(cell_t cell[], ad7280a_t *ad72) {
 
 cell_status_t cell_get_status(cell_t *cell) {
     return cell->status;
+}
+
+cell_status_t cell_get_delta(cell_t *cell) {
+    return cell->delta;
 }
 
 cell_health_t cell_get_health(cell_t *cell) {

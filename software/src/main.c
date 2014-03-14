@@ -29,10 +29,6 @@ ad7280a_t ad72;
 acs_t acs;
 console_t console;
 
-int cb_on = 0;
-int cb_num = 0;
-int i = 0;
-
 static Mutex mtx; /* Mutex declaration */
 
 //  chMtxLock(&mtx);
@@ -59,9 +55,10 @@ static void monitor_thread(void *arg) {
   acs_enable_fault(&acs);
 
   while (true) {
-//  monitor_cellbalance(cells, &ad72);
     monitor_voltage(cells, &ad72, &batt);
     monitor_current(&acs);
+//  monitor_cellbalance(cells, &ad72);
+    monitor_health_check(&batt, cells, &acs);
     consolePrintStatus(cells, &console, &acs, &batt);
   }
 }
