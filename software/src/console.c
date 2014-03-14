@@ -85,38 +85,195 @@ void consolePrintStatus(cell_t cells[], console_t *console, acs_t *acs,
   // Cell 1
   console_write(console, "cell1: ");
   console_write(console, itoa(cells[0].voltage, buffer));
+
   console_write(console, " bal: ");
-  console_writeline(console, itoa(cells[0].is_balancing, buffer));
+  console_write(console, itoa(cells[0].is_balancing, buffer));
+
+  console_write(console, " HEALTH: ");
+  switch(cells[0].health) {
+  case CELL_HEALTH_UNKNOWN:
+    console_write(console, " UNKNOWN ");
+    break;
+  case CELL_HEALTH_GOOD:
+    console_write(console, " GOOD ");
+    break;
+  case CELL_HEALTH_OVERHEAT:
+    console_write(console, " OVERHEAT ");
+    break;
+  case CELL_HEALTH_OVER_VOLTAGE:
+    console_write(console, " OVERVOLTAGE ");
+    break;
+  case CELL_HEALTH_UNDER_VOLTAGE:
+    console_write(console, " UNDERVOLTAGE ");
+    break;
+  case CELL_HEALTH_UNSPECIFIED_FAILURE:
+    console_write(console, " UNSPECIFIED_FAILURE ");
+    break;
+  case CELL_HEALTH_DEAD:
+    console_write(console, " DEAD ");
+  }
+  console_writeline(console, "");
+
 
   // Cell 2
   console_write(console, "cell2: ");
   console_write(console, itoa(cells[1].voltage, buffer));
+
   console_write(console, " bal: ");
-  console_writeline(console, itoa(cells[1].is_balancing, buffer));
+  console_write(console, itoa(cells[1].is_balancing, buffer));
+
+  console_write(console, " HEALTH: ");
+  switch(cells[1].health) {
+  case CELL_HEALTH_UNKNOWN:
+    console_write(console, " UNKNOWN ");
+    break;
+  case CELL_HEALTH_GOOD:
+    console_write(console, " GOOD ");
+    break;
+  case CELL_HEALTH_OVERHEAT:
+    console_write(console, " OVERHEAT ");
+    break;
+  case CELL_HEALTH_OVER_VOLTAGE:
+    console_write(console, " OVERVOLTAGE ");
+    break;
+  case CELL_HEALTH_UNDER_VOLTAGE:
+    console_write(console, " UNDERVOLTAGE ");
+    break;
+  case CELL_HEALTH_UNSPECIFIED_FAILURE:
+    console_write(console, " UNSPECIFIED_FAILURE ");
+    break;
+  case CELL_HEALTH_DEAD:
+    console_write(console, " DEAD ");
+  }
+  console_writeline(console, "");
 
   // Cell 3
   console_write(console, "cell3: ");
   console_write(console, itoa(cells[2].voltage, buffer));
+
   console_write(console, " bal: ");
-  console_writeline(console, itoa(cells[2].is_balancing, buffer));
+  console_write(console, itoa(cells[2].is_balancing, buffer));
+
+  console_write(console, " HEALTH: ");
+  switch(cells[2].health) {
+  case CELL_HEALTH_UNKNOWN:
+    console_write(console, " UNKNOWN ");
+    break;
+  case CELL_HEALTH_GOOD:
+    console_write(console, " GOOD ");
+    break;
+  case CELL_HEALTH_OVERHEAT:
+    console_write(console, " OVERHEAT ");
+    break;
+  case CELL_HEALTH_OVER_VOLTAGE:
+    console_write(console, " OVERVOLTAGE ");
+    break;
+  case CELL_HEALTH_UNDER_VOLTAGE:
+    console_write(console, " UNDERVOLTAGE ");
+    break;
+  case CELL_HEALTH_UNSPECIFIED_FAILURE:
+    console_write(console, " UNSPECIFIED_FAILURE ");
+    break;
+  case CELL_HEALTH_DEAD:
+    console_write(console, " DEAD ");
+  }
+  console_writeline(console, "");
 
   // Cell 4
   console_write(console, "cell4: ");
   console_write(console, itoa(cells[3].voltage, buffer));
+
   console_write(console, " bal: ");
-  console_writeline(console, itoa(cells[3].is_balancing, buffer));
+  console_write(console, itoa(cells[3].is_balancing, buffer));
+
+  console_write(console, " HEALTH: ");
+  switch(cells[3].health) {
+  case CELL_HEALTH_UNKNOWN:
+    console_write(console, " UNKNOWN ");
+    break;
+  case CELL_HEALTH_GOOD:
+    console_write(console, " GOOD ");
+    break;
+  case CELL_HEALTH_OVERHEAT:
+    console_write(console, " OVERHEAT ");
+    break;
+  case CELL_HEALTH_OVER_VOLTAGE:
+    console_write(console, " OVERVOLTAGE ");
+    break;
+  case CELL_HEALTH_UNDER_VOLTAGE:
+    console_write(console, " UNDERVOLTAGE ");
+    break;
+  case CELL_HEALTH_UNSPECIFIED_FAILURE:
+    console_write(console, " UNSPECIFIED_FAILURE ");
+    break;
+  case CELL_HEALTH_DEAD:
+    console_write(console, " DEAD ");
+  }
+  console_writeline(console, "");
 
   // Cell 5
   console_write(console, "cell5: ");
   console_write(console, itoa(cells[4].voltage, buffer));
+
   console_write(console, " bal: ");
-  console_writeline(console, itoa(cells[4].is_balancing, buffer));
+  console_write(console, itoa(cells[4].is_balancing, buffer));
+
+  console_write(console, " HEALTH: ");
+  switch(cells[4].health) {
+  case CELL_HEALTH_UNKNOWN:
+    console_write(console, " UNKNOWN ");
+    break;
+  case CELL_HEALTH_GOOD:
+    console_write(console, " GOOD ");
+    break;
+  case CELL_HEALTH_OVERHEAT:
+    console_write(console, " OVERHEAT ");
+    break;
+  case CELL_HEALTH_OVER_VOLTAGE:
+    console_write(console, " OVERVOLTAGE ");
+    break;
+  case CELL_HEALTH_UNDER_VOLTAGE:
+    console_write(console, " UNDERVOLTAGE ");
+    break;
+  case CELL_HEALTH_UNSPECIFIED_FAILURE:
+    console_write(console, " UNSPECIFIED_FAILURE ");
+    break;
+  case CELL_HEALTH_DEAD:
+    console_write(console, " DEAD ");
+  }
+  console_writeline(console, "");
 
   // Cell 6
   console_write(console, "cell6: ");
   console_write(console, itoa(cells[5].voltage, buffer));
+
   console_write(console, " bal: ");
-  console_writeline(console, itoa(cells[5].is_balancing, buffer));
+  console_write(console, itoa(cells[5].is_balancing, buffer));
+
+  console_write(console, " HEALTH: ");
+  switch(cells[5].health) {
+  case CELL_HEALTH_UNKNOWN:
+    console_write(console, " UNKNOWN ");
+    break;
+  case CELL_HEALTH_GOOD:
+    console_write(console, " GOOD ");
+    break;
+  case CELL_HEALTH_OVERHEAT:
+    console_write(console, " OVERHEAT ");
+    break;
+  case CELL_HEALTH_OVER_VOLTAGE:
+    console_write(console, " OVERVOLTAGE ");
+    break;
+  case CELL_HEALTH_UNDER_VOLTAGE:
+    console_write(console, " UNDERVOLTAGE ");
+    break;
+  case CELL_HEALTH_UNSPECIFIED_FAILURE:
+    console_write(console, " UNSPECIFIED_FAILURE ");
+    break;
+  case CELL_HEALTH_DEAD:
+    console_write(console, " DEAD ");
+  }
+  console_writeline(console, "");
 
   // Total Voltage
   console_write(console, "Total: ");

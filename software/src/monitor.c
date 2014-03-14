@@ -27,7 +27,6 @@ void monitor_health_check(battery_t *battery, cell_t cells[], acs_t *acs) {
 			cells[i].health = CELL_HEALTH_OVERHEAT;
 			battery->health = BATTERY_HEALTH_OVERHEAT;
 			palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
-			return;
 		}
 
     // Max Delta Check:
@@ -43,7 +42,6 @@ void monitor_health_check(battery_t *battery, cell_t cells[], acs_t *acs) {
 			cells[i].health = CELL_HEALTH_OVER_VOLTAGE;
 			battery->health = BATTERY_HEALTH_OVER_VOLTAGE;
 			palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
-			return;
 		}
 
 		// UnderVoltage Check:
@@ -51,7 +49,6 @@ void monitor_health_check(battery_t *battery, cell_t cells[], acs_t *acs) {
 			cells[i].health = CELL_HEALTH_UNDER_VOLTAGE;
 			battery->health = BATTERY_HEALTH_DEAD;
 			palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
-			return;
 		}
 	}
 
@@ -59,7 +56,6 @@ void monitor_health_check(battery_t *battery, cell_t cells[], acs_t *acs) {
 	if (acs->current > MAXIMUM_CURRENT) {
 		battery->health = BATTERY_HEALTH_OVER_CURRENT;
 		palSetPad(GPIOD, GPIOD_POWERMODULE);        // Emergency shutdown
-		return;
 	}
 }
 
