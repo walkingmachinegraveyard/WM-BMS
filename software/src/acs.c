@@ -36,6 +36,12 @@ static DACConfig dac_config = {
   0                     // DAC CR flags
 };
 
+/**
+ * This callback is alled once the adc conversion has finished for the CurrSens
+ * @param adcp    The ADCDriver address
+ * @param buffer  The buffer in which the ADC samples are stored
+ * @param n       The size of the buffer
+ */
 static void adc_conversion_end_CurrentSens(ADCDriver *adcp, adcsample_t *buffer, size_t n) {
   (void) adcp;
   uint16_t i=0;
@@ -47,6 +53,12 @@ static void adc_conversion_end_CurrentSens(ADCDriver *adcp, adcsample_t *buffer,
   return;
 }
 
+/**
+ * This callback is alled once the adc conversion has finished for the VZCR
+ * @param adcp    The ADCDriver address
+ * @param buffer  The buffer in which the ADC samples are stored
+ * @param n       The size of the buffer
+ */
 static void adc_conversion_end_VZCR(ADCDriver *adcp, adcsample_t *buffer, size_t n) {
   (void) adcp;
   uint16_t i=0;
@@ -58,11 +70,16 @@ static void adc_conversion_end_VZCR(ADCDriver *adcp, adcsample_t *buffer, size_t
   return;
 }
 
+
 static void adc_error(ADCDriver *adcp, adcerror_t err) {
   (void) adcp;
   (void) err;
 }
 
+
+/**
+ * The configuration group for the CurrentSens ADC
+ */
 static ADCConversionGroup adc_convgroup_config_CurrentSens= {
   FALSE,               // continuous
   1,                  // 2 channels
@@ -77,6 +94,9 @@ static ADCConversionGroup adc_convgroup_config_CurrentSens= {
   ADC_SQR3_SQ1_N(ADC_CHANNEL_IN10),   // CurrentSens Channel
 };
 
+/**
+ * The configuration group for the VZCR ADC
+ */
 static ADCConversionGroup adc_convgroup_config_VZCR= {
   FALSE,               // continuous
   1,                  // 2 channels
@@ -91,6 +111,11 @@ static ADCConversionGroup adc_convgroup_config_VZCR= {
   ADC_SQR3_SQ1_N(ADC_CHANNEL_IN11),   // CurrentSens Channel
 };
 
+/**
+ * This function initiate a lecture for of the output current
+ * @param acs The address of the ACS current sensor
+ * @return    The value in mA of the current being read
+ */
 int32_t acs_read_currsens(acs_t *acs) {
 
   int16_t result;
@@ -125,18 +150,29 @@ int32_t acs_read_currsens(acs_t *acs) {
   return result;
 }
 
-// Enable overcurrent faulting
+/**
+ * Enable overcurrent faulting
+ * @param acs The address of the ACS current sensor
+ */
 void acs_enable_fault(acs_t *acs) {
   palSetPad(GPIOA,3);
   acs->fault_en = 1;
 }
 
-// Disable overcurrent faulting
+/**
+ * Disable overcurrent faulting
+ * @param acs The address of the ACS current sensor
+ */
 void acs_disable_fault(acs_t *acs) {
   palClearPad(GPIOA,3);
   acs->fault_en = 0;
 }
 
+/**
+ * Hardware init of the ACS current sensor
+ * @param acs The address of the ACS current sensor
+ * @return
+ */
 static uint8_t acs_init_hw(acs_t *acs) {
 
   acs->dd     = &DACD1;
@@ -164,16 +200,25 @@ static uint8_t acs_init_hw(acs_t *acs) {
   return 0;
 }
 
-// ACS initialise
+/**
+ * A simple redirecting function for proper naming purposes
+ * @param acs The address of the ACS current sensor
+ * @return
+ */
 uint8_t acs_init(acs_t *acs) {
     acs_init_hw(acs);
     return 0;
 }
 
-// VOC = Sens × | IOC |
-// Dans notre cas le Sens = 18.48mV/A
-// LSB of the DAC is
-// Choisir une valeure entre 0A et 60A
+/**
+ * VOC = Sens × | IOC |
+ * Dans notre cas le Sens = 18.48mV/A
+ * LSB of the DAC is
+   Choisir une valeure entre 0A et 60A
+ * @param acs The address of the ACS current sensor
+ * @param amps The ammount of AMPS you want to limit
+ * @return
+ */
 uint16_t acs_set_threshold(acs_t *acs, uint8_t amps) {
   (void) acs;
   if(amps>60) {

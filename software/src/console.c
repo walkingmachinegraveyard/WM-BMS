@@ -5,6 +5,10 @@
 // drive
 #include "console.h"
 
+/**
+ * This is the configuration for the Serial Port
+ * 1rst Parameter is the BaudRate
+ */
 static SerialConfig serial1_config = {
     115200,
     0,
@@ -12,6 +16,11 @@ static SerialConfig serial1_config = {
     0,
 };
 
+
+/**
+ * This function initialise the console
+ * @param c The address of the console that needs to be initialised
+ */
 void console_init(struct console *c) {
     c->sd = &SD1;
     c->sc = &serial1_config;
@@ -21,6 +30,7 @@ void console_init(struct console *c) {
     palSetPadMode(GPIOA, 10, PAL_MODE_ALTERNATE(7));
 }
 
+#ifdef TODO
 int16_t console_readline(struct console *c, uint8_t *buffer, uint16_t count) {
     (void) c;
     (void) buffer;
@@ -34,6 +44,7 @@ int16_t console_read(struct console *c, uint8_t *buffer, uint16_t count) {
     (void) count;
     return 0;
 }
+#endif
 
 int16_t console_writeline(console_t *c, const char *buffer) {
     int16_t bytes_sent = 0;

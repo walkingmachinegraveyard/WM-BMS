@@ -134,6 +134,7 @@ int main(int argc, char *argv[]) {
   console_init(&console);
   init_ad7280a(&ad72);
   cell_init(cells, &ad72);
+  battery_init(&batt);
 
   // Monitor Thread Initialization
   chThdCreateStatic(monitor_thread_wa, sizeof(monitor_thread_wa), NORMALPRIO,

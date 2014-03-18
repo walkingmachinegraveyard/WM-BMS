@@ -225,6 +225,11 @@ void monitor_cellbalance(cell_t cells[], ad7280a_t *ad72) {
   }
 }
 
+/**
+ * This function simply calls the acs_read_currsens function
+ * (Used for readability purposes)
+ * @param acs The address of the ACS current sensor
+ */
 void monitor_current(acs_t *acs) {
   acs_read_currsens(acs);
 }
