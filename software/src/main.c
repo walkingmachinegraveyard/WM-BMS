@@ -29,21 +29,74 @@ ad7280a_t ad72;
 acs_t acs;
 console_t console;
 
+struct can_instance {
+  CANDriver     *canp;
+  uint32_t      led;
+};
+
+static const CANConfig cancfg = {
+  CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP,
+  CAN_BTR_LBKM | CAN_BTR_SJW(0) | CAN_BTR_TS2(1) |
+  CAN_BTR_TS1(8) | CAN_BTR_BRP(6)
+};
+
+static const struct can_instance can1 = {&CAND1, 1};
+static const struct can_instance can2 = {&CAND2, 2};
+
 static Mutex mtx; /* Mutex declaration */
 
 //  chMtxLock(&mtx);
 //  /* Protected code */
 //  chMtxUnlock();
 
-// CanBus  Thread
-static WORKING_AREA(canbus_thread_wa, 128);
-static void canbus_thread(void *arg) {
+/*
+ * Receiver thread.
+ */
+static WORKING_AREA(can_rx1_wa, 256);
+static WORKING_AREA(can_rx2_wa, 256);
+static msg_t can_rx(void *p) {
+  struct can_instance *cip = p;
+  EventListener el;
+  CANRxFrame rxmsg;
 
-  (void) arg;  // remove a warning...
-
-  while (true) {
-    chThdSleepMilliseconds(133);
+  (void)p;
+  chRegSetThreadName("receiver");
+  chEvtRegister(&cip->canp->rxfull_event, &el, 0);
+  while(!chThdShouldTerminate()) {
+    if (chEvtWaitAnyTimeout(ALL_EVENTS, MS2ST(100)) == 0)
+      continue;
+    while (canReceive(cip->canp, CAN_ANY_MAILBOX,
+                      &rxmsg, TIME_IMMEDIATE) == RDY_OK) {
+      /* Process message.*/
+      palTogglePad(GPIOD, cip->led);
+    }
   }
+  chEvtUnregister(&CAND1.rxfull_event, &el);
+  return 0;
+}
+
+/*
+ * Transmitter thread.
+ */
+static WORKING_AREA(can_tx_wa, 256);
+static msg_t can_tx(void * p) {
+  CANTxFrame txmsg;
+
+  (void)p;
+  chRegSetThreadName("transmitter");
+  txmsg.IDE = CAN_IDE_EXT;
+  txmsg.EID = 0x01234567;
+  txmsg.RTR = CAN_RTR_DATA;
+  txmsg.DLC = 8;
+  txmsg.data32[0] = 0x55AA55AA;
+  txmsg.data32[1] = 0x00FF00FF;
+
+  while (!chThdShouldTerminate()) {
+    canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
+    canTransmit(&CAND2, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
+    chThdSleepMilliseconds(500);
+  }
+  return 0;
 }
 
 // Monitoring Thread
@@ -55,7 +108,7 @@ static void monitor_thread(void *arg) {
   acs_enable_fault(&acs);
 
   while (true) {
-    monitor_voltage(cells, &ad72, &batt);
+    monitor_cells(cells, &ad72, &batt, therms);
     monitor_current(&acs);
 //  monitor_cellbalance(cells, &ad72);
     monitor_health_check(&batt, cells, &acs);
@@ -86,9 +139,21 @@ int main(int argc, char *argv[]) {
   chThdCreateStatic(monitor_thread_wa, sizeof(monitor_thread_wa), NORMALPRIO,
       (tfunc_t) monitor_thread, NULL);
 
-  // CanBus Thread Initialization
-  chThdCreateStatic(canbus_thread_wa, sizeof(canbus_thread_wa), NORMALPRIO,
-      (tfunc_t) canbus_thread, NULL);
+  /*
+   * Activates the CAN drivers 1 and 2.
+   */
+  canStart(&CAND1, &cancfg);
+  canStart(&CAND2, &cancfg);
+
+  /*
+   * Starting the transmitter and receiver threads.
+   */
+  chThdCreateStatic(can_rx1_wa, sizeof(can_rx1_wa), NORMALPRIO + 7,
+                    can_rx, (void *)&can1);
+  chThdCreateStatic(can_rx2_wa, sizeof(can_rx2_wa), NORMALPRIO + 7,
+                    can_rx, (void *)&can2);
+  chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7,
+                    can_tx, NULL);
 
   // Infinite loop
   while (true) {

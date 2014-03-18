@@ -23,7 +23,7 @@
 
 void monitor_cellbalance(cell_t cells[], ad7280a_t *ad7280a);
 void monitor_health_check(battery_t *battery, cell_t cells[], acs_t *acs);
-void monitor_voltage(cell_t cells[], ad7280a_t *ad72, battery_t *batt);
+void monitor_cells(cell_t cells[], ad7280a_t *ad72, battery_t *batt, therm_t therms[]);
 void monitor_current(acs_t *acs);
 
 #endif /* MONITOR_H_ */

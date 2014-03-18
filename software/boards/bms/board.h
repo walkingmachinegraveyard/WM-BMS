@@ -52,8 +52,9 @@
 #define GPIOA_SWDIO             13
 #define GPIOA_SWCLK             14
 
+#define GPIOB_CAN_TX            6
+#define GPIOB_CAN_RX            5
 #define GPIOB_SWO               3
-#define GPIOB_SCL               6
 #define GPIOB_SDA               9
 #define GPIOB_SCK               10
 #define GPIOB_CNVST             0
@@ -174,7 +175,8 @@
                              PIN_MODE_ALTERNATE(GPIOB_SWO) |                \
                              PIN_MODE_INPUT(4) |                            \
                              PIN_MODE_INPUT(5) |                            \
-                             PIN_MODE_ALTERNATE(GPIOB_SCL) |                \
+                             PIN_MODE_ALTERNATE(GPIOB_CAN_TX) |             \
+                             PIN_MODE_ALTERNATE(GPIOB_CAN_RX) |             \
                              PIN_MODE_INPUT(7) |                            \
                              PIN_MODE_INPUT(8) |                            \
                              PIN_MODE_ALTERNATE(GPIOB_SDA) |                \
@@ -184,7 +186,8 @@
                              PIN_MODE_INPUT(13) |                           \
                              PIN_MODE_INPUT(14) |                           \
                              PIN_MODE_INPUT(15))
-#define VAL_GPIOB_OTYPER    (PIN_OTYPE_OPENDRAIN(GPIOB_SCL) |               \
+#define VAL_GPIOB_OTYPER    (PIN_OTYPE_OPENDRAIN(GPIOB_CAN_TX) |               \
+                             PIN_OTYPE_OPENDRAIN(GPIOB_CAN_RX) |               \
                              PIN_OTYPE_OPENDRAIN(GPIOB_SDA))
 #define VAL_GPIOB_OSPEEDR   0xFFFFFFFF
 #define VAL_GPIOB_PUPDR     (PIN_PUDR_PULLUP(0) |                           \
@@ -193,7 +196,8 @@
                              PIN_PUDR_FLOATING(GPIOB_SWO) |                 \
                              PIN_PUDR_PULLUP(4) |                           \
                              PIN_PUDR_PULLUP(5) |                           \
-                             PIN_PUDR_FLOATING(GPIOB_SCL) |                 \
+                             PIN_PUDR_FLOATING(GPIOB_CAN_TX) |                 \
+                             PIN_PUDR_FLOATING(GPIOB_CAN_RX) |                 \
                              PIN_PUDR_PULLUP(7) |                           \
                              PIN_PUDR_PULLUP(8) |                           \
                              PIN_PUDR_FLOATING(GPIOB_SDA) |                 \
@@ -205,7 +209,8 @@
                              PIN_PUDR_PULLUP(15))
 #define VAL_GPIOB_ODR       0xFFFFFFFF
 #define VAL_GPIOB_AFRL      (PIN_AFIO_AF(GPIOB_SWO, 0) |                    \
-                             PIN_AFIO_AF(GPIOB_SCL, 4))
+                             PIN_AFIO_AF(GPIOB_CAN_TX, 4) |                 \
+                             PIN_AFIO_AF(GPIOB_CAN_RX, 4))
 #define VAL_GPIOB_AFRH      (PIN_AFIO_AF(GPIOB_SDA, 4))
 
 /*

@@ -15,19 +15,19 @@
  */
 void monitor_health_check(battery_t *battery, cell_t cells[], acs_t *acs) {
 
-	uint8_t i;
-	battery->health = BATTERY_HEALTH_GOOD;
+  uint8_t i;
+  battery->health = BATTERY_HEALTH_GOOD;
 
-	for (i = 0; i < 6; ++i) {
+  for (i = 0; i < 6; ++i) {
 
-		cells[i].health = CELL_HEALTH_GOOD;
+    cells[i].health = CELL_HEALTH_GOOD;
 
-		// Overheat Check:
-		if (cells[i].temperature > MAX_TEMP) {
-			cells[i].health = CELL_HEALTH_OVERHEAT;
-			battery->health = BATTERY_HEALTH_OVERHEAT;
-			palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
-		}
+    // Overheat Check:
+    if (cells[i].temperature > MAX_TEMP) {
+      cells[i].health = CELL_HEALTH_OVERHEAT;
+      battery->health = BATTERY_HEALTH_OVERHEAT;
+      palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
+    }
 
     // Max Delta Check:
     if (cells[i].delta == CELL_IS_SUPERIOR_TO_MAX_DELTA) {
@@ -37,66 +37,144 @@ void monitor_health_check(battery_t *battery, cell_t cells[], acs_t *acs) {
       battery->health = BATTERY_IS_INFERIOR_TO_MAX_DELTA;
     }
 
-		// OverVoltage Check:
-		if (cells[i].voltage > MAX_VOLTAGE) {
-			cells[i].health = CELL_HEALTH_OVER_VOLTAGE;
-			battery->health = BATTERY_HEALTH_OVER_VOLTAGE;
-			palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
-		}
+    // OverVoltage Check:
+    if (cells[i].voltage > MAX_VOLTAGE) {
+      cells[i].health = CELL_HEALTH_OVER_VOLTAGE;
+      battery->health = BATTERY_HEALTH_OVER_VOLTAGE;
+      palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
+    }
 
-		// UnderVoltage Check:
-		if (cells[i].voltage < MINIMAL_VOLTAGE) {
-			cells[i].health = CELL_HEALTH_UNDER_VOLTAGE;
-			battery->health = BATTERY_HEALTH_DEAD;
-			palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
-		}
-	}
+    // UnderVoltage Check:
+    if (cells[i].voltage < MINIMAL_VOLTAGE) {
+      cells[i].health = CELL_HEALTH_UNDER_VOLTAGE;
+      battery->health = BATTERY_HEALTH_DEAD;
+      palSetPad(GPIOD, GPIOD_POWERMODULE);      // Emergency shutdown
+    }
+  }
 
-	// Overcurrent Check:
-	if (acs->current > MAXIMUM_CURRENT) {
-		battery->health = BATTERY_HEALTH_OVER_CURRENT;
-		palSetPad(GPIOD, GPIOD_POWERMODULE);        // Emergency shutdown
-	}
+  // Overcurrent Check:
+  if (acs->current > MAXIMUM_CURRENT) {
+    battery->health = BATTERY_HEALTH_OVER_CURRENT;
+    palSetPad(GPIOD, GPIOD_POWERMODULE);        // Emergency shutdown
+  }
 }
 
 /**
- * Update the status of the cells
- * @param cell An array of cells
- * @param therm An array of thermistors
- * @param ad72 The address of the ad7280a
+ * Update the voltage of the cells and their temperature
+ * @param cells   An array of cells
+ * @param ad72    The address of the AD7280A ADC
+ * @param batt    The battery being monitored
+ * @param therms  An array of thermistors
  */
-void monitor_voltage(cell_t cells[], ad7280a_t *ad72, battery_t *batt) {
+void monitor_cells(cell_t cells[], ad7280a_t *ad72, battery_t *batt,
+    therm_t therms[]) {
 
-	uint8_t i;
-	uint32_t batt_volt = 0;
+  uint8_t i;
+  ad7280a_packet_t packet;
+  uint32_t batt_volt = 0;
 
-	for (i = 0; i < 6; ++i) {
-		// Check the cell voltage
-		cells[i].voltage = ad7280a_read_cell(&cells[i], ad72);
-		batt_volt += cells[i].voltage;
-	}
+  // 1.Conversion Read Register Settings
+  bus_write(ad72, AD7280A_READ,
+      AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
+          | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_6ADC, WRITE_ALL_ENABLED);
 
-	batt->voltage = batt_volt;
-}
+  // 2. Control Register Settings
+  bus_write(ad72, AD7280A_CONTROL,
+      AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
+          | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_6ADC
+          | AD7280A_CONTROL_CONV_START_FORMAT_CNVST
+          | AD7280A_CONTROL_CONV_AVG_BY_8, WRITE_ALL_ENABLED);
 
-void monitor_temperature(cell_t cells[], therm_t therm[], ad7280a_t *ad72,
-		battery_t *batt) {
+  // 3.Program the CNVST control register to 0x02 to allow ad72 single pulse
+  bus_write(ad72, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_SINGLE,
+  WRITE_ALL_ENABLED);
 
-	uint8_t i;
+  // 4.1 Initiate conversions through the falling edge of CNVST.
+  palClearPad(GPIOB, GPIOB_CNVST);
 
-	// Check the temperature of the cells
-	for (i = 0; i < 6; ++i) {
-		therm_read_temp(therm, ad72);
+  // 4.2 Allow sufficient time for all conversions to be completed
+  chThdSleepMilliseconds(ad72->delay_ms);
 
-		// Take the highest temperature from the two therms
-		if (therm[0].temperature > therm[1].temperature) {
-			cells[i].temperature = therm[0].temperature;
-			batt->temperature = therm[0].temperature;
-		} else {
-			cells[i].temperature = therm[1].temperature;
-			batt->temperature = therm[1].temperature;
-		}
-	}
+  // 4.3 Latch the CNVST back to one
+  palSetPad(GPIOB, GPIOB_CNVST);
+
+  // 5 Gate the CNVST, this prevents unintentional conversions
+  bus_write(ad72, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_GATED,
+  WRITE_ALL_DISABLED);
+
+  // 6. Apply 32 SCLKS to have the data in the receive for cell #1
+  (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
+  spi_exchange(ad72);
+  packet.packed = (ad72->rxbuf);
+  cells[0].voltage = ((packet.r_conversion.conversion_data * 0.975) + 1000);
+
+  // 7. Apply 32 SCLKS to have the data in the receive for cell #2
+  (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
+  spi_exchange(ad72);
+  packet.packed = (ad72->rxbuf);
+  cells[1].voltage = ((packet.r_conversion.conversion_data * 0.975) + 1000);
+
+  // 8. Apply 32 SCLKS to have the data in the receive for cell #3
+  (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
+  spi_exchange(ad72);
+  packet.packed = (ad72->rxbuf);
+  cells[2].voltage = ((packet.r_conversion.conversion_data * 0.975) + 1000);
+
+  // 9. Apply 32 SCLKS to have the data in the receive for cell #4
+  (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
+  spi_exchange(ad72);
+  packet.packed = (ad72->rxbuf);
+  cells[3].voltage = ((packet.r_conversion.conversion_data * 0.975) + 1000);
+
+  // 10. Apply 32 SCLKS to have the data in the receive for cell #5
+  (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
+  spi_exchange(ad72);
+  packet.packed = (ad72->rxbuf);
+  cells[4].voltage = ((packet.r_conversion.conversion_data * 0.975) + 1000);
+
+  // 11. Apply 32 SCLKS to have the data in the receive for cell #6
+  (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
+  spi_exchange(ad72);
+  packet.packed = (ad72->rxbuf);
+  cells[5].voltage = ((packet.r_conversion.conversion_data * 0.975) + 1000);
+
+  // 12. Apply 32 SCLKS to have the data in the receive for therm #1
+  (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
+  spi_exchange(ad72);
+  packet.packed = (ad72->rxbuf);
+  therms[0].temperature =
+      ((packet.r_conversion.conversion_data * 0.975) + 1000);
+
+  // 13. Apply 32 SCLKS to have the data in the receive for therm #2
+  (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
+  spi_exchange(ad72);
+  packet.packed = (ad72->rxbuf);
+  therms[1].temperature =
+      ((packet.r_conversion.conversion_data * 0.975) + 1000);
+
+  // 14. Take the highest temperature from the two therms
+  for(i = 0; i < 6; ++i){
+    if (therms[0].temperature > therms[1].temperature) {
+      cells[i].temperature = therms[0].temperature;
+      batt->temperature = therms[0].temperature;
+    } else {
+      cells[i].temperature = therms[1].temperature;
+      batt->temperature = therms[1].temperature;
+    }
+  }
+
+  // 15. Apply 32 SCLKS four times to clear data remaining AUX data
+  for (i = 0; i <= 4; ++i) {
+    (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
+    spi_exchange(ad72);
+  }
+
+  // 16. Sum up the voltages to indicate the battery voltage
+  for (i = 0; i < 6; ++i) {
+    batt_volt += cells[i].voltage;
+  }
+
+  batt->voltage = batt_volt;
 }
 
 /**
@@ -106,47 +184,47 @@ void monitor_temperature(cell_t cells[], therm_t therm[], ad7280a_t *ad72,
  * @param ad7280a   The address of the ad7280a structure
  */
 void monitor_cellbalance(cell_t cells[], ad7280a_t *ad72) {
-	uint8_t i;
-	uint8_t lowest_cell;
-	uint32_t compare = ~0;
+  uint8_t i;
+  uint8_t lowest_cell;
+  uint32_t compare = ~0;
 
-	// Verify the CellBalance status of each cells
-	for (i = 0; i <= 5; ++i) {
-		if ((ad7280a_read_register(AD7280A_CELL_BALANCE, ad72)
-				>> (cells[i].cell_id + 1)) & 1)
-			cells[i].is_balancing = CELL_IS_BALANCING;
-		if (!((ad7280a_read_register(AD7280A_CELL_BALANCE, ad72)
-				>> (cells[i].cell_id + 1)) & 1))
-			cells[i].is_balancing = CELL_IS_NOT_BALANCING;
-	}
+  // Verify the CellBalance status of each cells
+  for (i = 0; i <= 5; ++i) {
+    if ((ad7280a_read_register(AD7280A_CELL_BALANCE, ad72)
+        >> (cells[i].cell_id + 1)) & 1)
+      cells[i].is_balancing = CELL_IS_BALANCING;
+    if (!((ad7280a_read_register(AD7280A_CELL_BALANCE, ad72)
+        >> (cells[i].cell_id + 1)) & 1))
+      cells[i].is_balancing = CELL_IS_NOT_BALANCING;
+  }
 
-	// Find the cell with the lowest voltage
-	for (i = 0; i < 6; ++i) {
-		if (cells[i].voltage < compare) {
-			compare = cells[i].voltage;
-			lowest_cell = cells[i].cell_id;
-		}
-	}
+  // Find the cell with the lowest voltage
+  for (i = 0; i < 6; ++i) {
+    if (cells[i].voltage < compare) {
+      compare = cells[i].voltage;
+      lowest_cell = cells[i].cell_id;
+    }
+  }
 
-	for (i = 0; i < 6; ++i) {
-		// Declare an emergency if the delta between cells voltage is superior to the accepted limit
-		if ((cells[i].voltage - cells[lowest_cell - 1].voltage) > MAX_DELTA)
-			cells[i].delta = CELL_IS_SUPERIOR_TO_MAX_DELTA;
-		else
-			cells[i].delta = CELL_IS_INFERIOR_TO_MAX_DELTA;
+  for (i = 0; i < 6; ++i) {
+    // Declare an emergency if the delta between cells voltage is superior to the accepted limit
+    if ((cells[i].voltage - cells[lowest_cell - 1].voltage) > MAX_DELTA)
+      cells[i].delta = CELL_IS_SUPERIOR_TO_MAX_DELTA;
+    else
+      cells[i].delta = CELL_IS_INFERIOR_TO_MAX_DELTA;
 
-		// Verify if the delta OR the voltage to any cells is superior to the limit
-		if (((cells[i].voltage - cells[lowest_cell - 1].voltage) > DELTA)
-				|| cells[i].voltage > MAX_VOLTAGE) {
+    // Verify if the delta OR the voltage to any cells is superior to the limit
+    if (((cells[i].voltage - cells[lowest_cell - 1].voltage) > DELTA)
+        || cells[i].voltage > MAX_VOLTAGE) {
 
-			if (cells[i].is_balancing == CELL_IS_NOT_BALANCING) // Check if there is transition
-				ad7280a_balance_cell_on(&cells[i], ad72);
+      if (cells[i].is_balancing == CELL_IS_NOT_BALANCING) // Check if there is transition
+        ad7280a_balance_cell_on(&cells[i], ad72);
 
-		} else if (cells[i].is_balancing == CELL_IS_BALANCING) // Check if there is transition
-			ad7280a_balance_cell_off(&cells[i], ad72);
-	}
+    } else if (cells[i].is_balancing == CELL_IS_BALANCING) // Check if there is transition
+      ad7280a_balance_cell_off(&cells[i], ad72);
+  }
 }
 
 void monitor_current(acs_t *acs) {
-	acs_read_currsens(acs);
+  acs_read_currsens(acs);
 }
