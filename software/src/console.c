@@ -85,7 +85,7 @@ char* itoa(int i, char b[]) {
     return b;
 }
 
-void consolePrintStatus(cell_t cells[], console_t *console, acs_t *acs,
+void consolePrintStatus(cell_t cells[], console_t *console, acs_t *acs, therm_t therms[],
                            battery_t *batt) {
 
   char buffer[20];
@@ -296,4 +296,13 @@ void consolePrintStatus(cell_t cells[], console_t *console, acs_t *acs,
     console_write(console, "-");
   itoa(acs_read_currsens(acs), buffer);
   console_writeline(console, buffer);
+
+  //Temperature Therm 1/2
+  console_writeline(console, "Thermistor #1");
+  console_writeline(console, itoa(therms[0].temperature, buffer));
+  //Temperature Therm 2/2
+  console_writeline(console, "Thermistor #2");
+  console_writeline(console, itoa(therms[1].temperature, buffer));
+
+
 }

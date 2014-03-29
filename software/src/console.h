@@ -21,7 +21,7 @@ void console_init(console_t *c);
 int16_t console_readline(console_t *c, uint8_t *buffer, uint16_t count);
 int16_t console_read(console_t *c, uint8_t *buffer, uint16_t count);
 int16_t console_writeline(console_t *c, const char *buffer);
-void consolePrintStatus(cell_t cells[], console_t *console, acs_t *acs,
+void consolePrintStatus(cell_t cells[], console_t *console, acs_t *acs,therm_t therms[],
                            battery_t *batt);
 int16_t console_write(console_t *c, const char *buffer);
 

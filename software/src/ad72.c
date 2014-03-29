@@ -217,11 +217,15 @@ uint32_t ad7280a_read_cell(cell_t *cell,ad7280a_t *ad72) {
             , WRITE_ALL_ENABLED);
 
   // 2.Control Register Settings
-  bus_write(ad72, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
-            | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_6ADC
-            | AD7280A_CONTROL_CONV_START_FORMAT_CNVST
-            | AD7280A_CONTROL_CONV_AVG_BY_8
-            , WRITE_ALL_DISABLED);
+  bus_write(ad72, AD7280A_CONTROL,
+      AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
+          | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_6ADC
+          | AD7280A_CONTROL_CONV_START_FORMAT_CNVST
+          | AD7280A_CONTROL_CONV_AVG_BY_8
+          | AD7280A_CONTROL_THERMISTOR_ENABLE
+          | AD7280A_CONTROL_ACQ_TIME_1600NS
+          | AD7280A_CONTROL_MUST_SET
+          , WRITE_ALL_ENABLED);
 
   // 3.Program the CNVST control register to 0x02 to allow ad72 single pulse
   bus_write(ad72, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_SINGLE,
@@ -270,8 +274,15 @@ uint32_t ad7280a_read_register(uint8_t address,ad7280a_t *ad72) {
             | AD7280A_CONTROL_CONV_INPUT_READ_DISABLE, WRITE_ALL_ENABLED);
 
   // 2. Turn on the read operation on the addressed part
-  bus_write(ad72, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
-            | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_6ADC, WRITE_ALL_DISABLED);
+  bus_write(ad72, AD7280A_CONTROL,
+      AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
+          | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_6ADC
+          | AD7280A_CONTROL_CONV_START_FORMAT_CNVST
+          | AD7280A_CONTROL_CONV_AVG_BY_8
+          | AD7280A_CONTROL_THERMISTOR_ENABLE
+          | AD7280A_CONTROL_ACQ_TIME_1600NS
+          | AD7280A_CONTROL_MUST_SET
+          , WRITE_ALL_ENABLED);
 
   // 3. Write the register address to the read register
   bus_write(ad72, AD7280A_READ, address << 2 , WRITE_ALL_DISABLED);
@@ -300,11 +311,15 @@ uint32_t ad7280a_read_therm(therm_t *therm, ad7280a_t *ad72) {
             , WRITE_ALL_ENABLED);
 
   // 2.Control Register Settings
-  bus_write(ad72, AD7280A_CONTROL, AD7280A_CONTROL_CONV_INPUT_6CELL_135ADC
-            | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_135ADC
-            | AD7280A_CONTROL_CONV_START_FORMAT_CNVST
-            | AD7280A_CONTROL_CONV_AVG_BY_8
-            , WRITE_ALL_DISABLED);
+  bus_write(ad72, AD7280A_CONTROL,
+      AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
+          | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_6ADC
+          | AD7280A_CONTROL_CONV_START_FORMAT_CNVST
+          | AD7280A_CONTROL_CONV_AVG_BY_8
+          | AD7280A_CONTROL_THERMISTOR_ENABLE
+          | AD7280A_CONTROL_ACQ_TIME_1600NS
+          | AD7280A_CONTROL_MUST_SET
+          , WRITE_ALL_ENABLED);
 
 
   // 3.Program the CNVST control register to 0x02 to allow ad72 single pulse

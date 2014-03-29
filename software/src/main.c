@@ -112,7 +112,9 @@ static void monitor_thread(void *arg) {
     monitor_current(&acs);
 //  monitor_cellbalance(cells, &ad72);
     monitor_health_check(&batt, cells, &acs);
-    consolePrintStatus(cells, &console, &acs, &batt);
+    consolePrintStatus(cells, &console, &acs, therms, &batt);
+    chThdSleepMilliseconds(133);
+
   }
 }
 

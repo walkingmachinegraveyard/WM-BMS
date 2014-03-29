@@ -83,7 +83,13 @@ void monitor_cells(cell_t cells[], ad7280a_t *ad72, battery_t *batt,
       AD7280A_CONTROL_CONV_INPUT_6CELL_6ADC
           | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_6ADC
           | AD7280A_CONTROL_CONV_START_FORMAT_CNVST
-          | AD7280A_CONTROL_CONV_AVG_BY_8, WRITE_ALL_ENABLED);
+          | AD7280A_CONTROL_CONV_AVG_BY_8
+          | AD7280A_CONTROL_THERMISTOR_NOT_IN_USE
+   //       | AD7280A_CONTROL_THERMISTOR_ENABLE
+   //       | AD7280A_CONTROL_ACQ_TIME_800NS
+   //       | AD7280A_CONTROL_ACQ_TIME_1600NS
+   //       | AD7280A_CONTROL_MUST_SET
+          , WRITE_ALL_ENABLED);
 
   // 3.Program the CNVST control register to 0x02 to allow ad72 single pulse
   bus_write(ad72, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_SINGLE,
@@ -142,15 +148,22 @@ void monitor_cells(cell_t cells[], ad7280a_t *ad72, battery_t *batt,
   (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
   spi_exchange(ad72);
   packet.packed = (ad72->rxbuf);
-  therms[0].temperature =
-      ((packet.r_conversion.conversion_data * 0.975) + 1000);
+  //therms[0].temperature =
+  //    packet.r_conversion.conversion_data;
+
+  ad7280a_read_therm(&therms[0], ad72);
+
+    //  ((packet.r_conversion.conversion_data * 0.975) + 1000);
 
   // 13. Apply 32 SCLKS to have the data in the receive for therm #2
   (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
   spi_exchange(ad72);
   packet.packed = (ad72->rxbuf);
-  therms[1].temperature =
-      ((packet.r_conversion.conversion_data * 0.975) + 1000);
+  //therms[1].temperature =
+    //  packet.r_conversion.conversion_data;
+  ad7280a_read_therm(&therms[1], ad72);
+
+
 
   // 14. Take the highest temperature from the two therms
   for(i = 0; i < 6; ++i){
