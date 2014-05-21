@@ -82,6 +82,7 @@
 #define AD7280A_CONTROL_ACQ_TIME_800NS                  (0x01 << 5)
 #define AD7280A_CONTROL_ACQ_TIME_1200NS                 (0x02 << 5)
 #define AD7280A_CONTROL_ACQ_TIME_1600NS                 (0x03 << 5)
+
 // Must be set to 1
 #define AD7280A_CONTROL_MUST_SET                        (0x01 << 4)
 // Thermistor termination resistor

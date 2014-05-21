@@ -161,7 +161,7 @@ void power_down_ad7280a(ad7280a_t *ad72) {
  * @return
  */
 uint8_t init_ad7280a(ad7280a_t *ad72) {
-  ad72->delay_ms = 10;
+  ad72->delay_ms = 1000;
   ad72->txbuf = 0;
   ad72->rxbuf = 0;
   power_up_ad7280a(ad72);

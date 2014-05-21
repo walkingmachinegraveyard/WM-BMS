@@ -41,6 +41,13 @@ void init_bms(bms_t *bms) {
   palSetPadMode(GPIOA, 7, PAL_MODE_ALTERNATE(5) |
   PAL_STM32_OSPEED_HIGHEST);       // MOSI
 
+  // CAN Setup (Temporary, must be done in board.h)
+  //palSetGroupMode(GPIOB, PAL_PORT_BIT(GPIOB_CAN_TX), 0, PAL_MODE_OUTPUT_PUSHPULL);
+  //palSetGroupMode(GPIOB, PAL_PORT_BIT(GPIOB_CAN_RX), 0, PAL_MODE_OUTPUT_PUSHPULL);
+  palSetPadMode(GPIOB, GPIOB_CAN_TX , PAL_MODE_ALTERNATE(9));
+  palSetPadMode(GPIOB, GPIOB_CAN_RX , PAL_MODE_ALTERNATE(9));
+  //palSetPad(GPIOB,GPIOB_CAN_TX);
+
   // Setup the LED default state
   palSetPad(GPIOE,GPIOE_GREEN_LED);
   palClearPad(GPIOE,GPIOE_RED_LED);

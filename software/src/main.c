@@ -31,7 +31,6 @@ console_t console;
 
 struct can_instance {
   CANDriver     *canp;
-  uint32_t      led;
 };
 
 static const CANConfig cancfg = {
@@ -40,20 +39,14 @@ static const CANConfig cancfg = {
   CAN_BTR_TS1(8) | CAN_BTR_BRP(6)
 };
 
-static const struct can_instance can1 = {&CAND1, 1};
-static const struct can_instance can2 = {&CAND2, 2};
+static const struct can_instance can2 = {&CAND2};
 
 static Mutex mtx; /* Mutex declaration */
-
-//  chMtxLock(&mtx);
-//  /* Protected code */
-//  chMtxUnlock();
 
 /*
  * Receiver thread.
  */
-static WORKING_AREA(can_rx1_wa, 256);
-static WORKING_AREA(can_rx2_wa, 256);
+static WORKING_AREA(can_rx_wa, 256);
 static msg_t can_rx(void *p) {
   struct can_instance *cip = p;
   EventListener el;
@@ -68,10 +61,10 @@ static msg_t can_rx(void *p) {
     while (canReceive(cip->canp, CAN_ANY_MAILBOX,
                       &rxmsg, TIME_IMMEDIATE) == RDY_OK) {
       /* Process message.*/
-      palTogglePad(GPIOD, cip->led);
+    	palTogglePad(GPIOE,GPIOE_GREEN_LED);
     }
   }
-  chEvtUnregister(&CAND1.rxfull_event, &el);
+  chEvtUnregister(&CAND2.rxfull_event, &el);
   return 0;
 }
 
@@ -88,11 +81,10 @@ static msg_t can_tx(void * p) {
   txmsg.EID = 0x01234567;
   txmsg.RTR = CAN_RTR_DATA;
   txmsg.DLC = 8;
-  txmsg.data32[0] = 0x55AA55AA;
-  txmsg.data32[1] = 0x00FF00FF;
+  txmsg.data32[0] = 0xAEEFEF3A;
+  txmsg.data32[1] = 0x00FFCCCF;
 
   while (!chThdShouldTerminate()) {
-    canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
     canTransmit(&CAND2, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
     chThdSleepMilliseconds(500);
   }
@@ -103,6 +95,8 @@ static msg_t can_tx(void * p) {
 static WORKING_AREA(monitor_thread_wa, 128);
 static void monitor_thread(void *arg) {
 
+	  chRegSetThreadName("monitor");
+
   (void) arg;  // remove a warning...
   acs_set_threshold(&acs, 25);
   acs_enable_fault(&acs);
@@ -112,7 +106,7 @@ static void monitor_thread(void *arg) {
     monitor_current(&acs);
 //  monitor_cellbalance(cells, &ad72);
     monitor_health_check(&batt, cells, &acs);
-    consolePrintStatus(cells, &console, &acs, therms, &batt);
+  //  consolePrintStatus(cells, &console, &acs, therms, &batt);
     chThdSleepMilliseconds(133);
 
   }
@@ -143,18 +137,16 @@ int main(int argc, char *argv[]) {
       (tfunc_t) monitor_thread, NULL);
 
   /*
-   * Activates the CAN drivers 1 and 2.
+   * Activates the CAN driver.
    */
-  canStart(&CAND1, &cancfg);
   canStart(&CAND2, &cancfg);
 
   /*
    * Starting the transmitter and receiver threads.
    */
-  chThdCreateStatic(can_rx1_wa, sizeof(can_rx1_wa), NORMALPRIO + 7,
-                    can_rx, (void *)&can1);
-  chThdCreateStatic(can_rx2_wa, sizeof(can_rx2_wa), NORMALPRIO + 7,
+  chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7,
                     can_rx, (void *)&can2);
+
   chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7,
                     can_tx, NULL);
 
@@ -169,6 +161,7 @@ int main(int argc, char *argv[]) {
     }
 
     chThdSleepMilliseconds(133);
+    //canTransmit(&CAND2, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
   }
   return 0;
 }

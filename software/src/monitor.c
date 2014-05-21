@@ -84,11 +84,11 @@ void monitor_cells(cell_t cells[], ad7280a_t *ad72, battery_t *batt,
           | AD7280A_CONTROL_CONV_INPUT_READ_6VOLT_6ADC
           | AD7280A_CONTROL_CONV_START_FORMAT_CNVST
           | AD7280A_CONTROL_CONV_AVG_BY_8
-          | AD7280A_CONTROL_THERMISTOR_NOT_IN_USE
-   //       | AD7280A_CONTROL_THERMISTOR_ENABLE
-   //       | AD7280A_CONTROL_ACQ_TIME_800NS
+ //         | AD7280A_CONTROL_THERMISTOR_NOT_IN_USE
+   //     | AD7280A_CONTROL_THERMISTOR_ENABLE
+//          | AD7280A_CONTROL_ACQ_TIME_800NS
    //       | AD7280A_CONTROL_ACQ_TIME_1600NS
-   //       | AD7280A_CONTROL_MUST_SET
+          | AD7280A_CONTROL_MUST_SET
           , WRITE_ALL_ENABLED);
 
   // 3.Program the CNVST control register to 0x02 to allow ad72 single pulse
@@ -104,9 +104,9 @@ void monitor_cells(cell_t cells[], ad7280a_t *ad72, battery_t *batt,
   // 4.3 Latch the CNVST back to one
   palSetPad(GPIOB, GPIOB_CNVST);
 
-  // 5 Gate the CNVST, this prevents unintentional conversions
-  bus_write(ad72, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_GATED,
-  WRITE_ALL_DISABLED);
+//  // 5 Gate the CNVST, this prevents unintentional conversions
+//  bus_write(ad72, AD7280A_CNVST_CONTROL, AD7280A_CNVST_CTRL_GATED,
+//  WRITE_ALL_DISABLED);
 
   // 6. Apply 32 SCLKS to have the data in the receive for cell #1
   (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
@@ -148,10 +148,10 @@ void monitor_cells(cell_t cells[], ad7280a_t *ad72, battery_t *batt,
   (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
   spi_exchange(ad72);
   packet.packed = (ad72->rxbuf);
-  //therms[0].temperature =
-  //    packet.r_conversion.conversion_data;
+  therms[0].temperature =
+      packet.r_conversion.conversion_data;
 
-  ad7280a_read_therm(&therms[0], ad72);
+  //ad7280a_read_therm(&therms[0], ad72);
 
     //  ((packet.r_conversion.conversion_data * 0.975) + 1000);
 
@@ -159,9 +159,9 @@ void monitor_cells(cell_t cells[], ad7280a_t *ad72, battery_t *batt,
   (ad72->txbuf) = AD7280A_RETRANSMIT_SCLKS; // (NODATA)
   spi_exchange(ad72);
   packet.packed = (ad72->rxbuf);
-  //therms[1].temperature =
-    //  packet.r_conversion.conversion_data;
-  ad7280a_read_therm(&therms[1], ad72);
+  therms[1].temperature =
+    packet.r_conversion.conversion_data;
+  //ad7280a_read_therm(&therms[1], ad72);
 
 
 
