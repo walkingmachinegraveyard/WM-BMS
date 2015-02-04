@@ -29,7 +29,7 @@
 #ifndef CO_APPLICATION_H
 #define CO_APPLICATION_H
 
-#include "canopen.h"
+#include "CANopen.h"
 
 /**
  * @defgroup CO_application Application interface

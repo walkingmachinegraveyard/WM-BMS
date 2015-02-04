@@ -41,7 +41,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
-#include "board.h"
+#include "Board.h"
 
 extern SPI_HandleTypeDef hspi1;
 
